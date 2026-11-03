@@ -947,3 +947,90 @@ Auteur de la version : Buffy (agent de code)
 1. Serveur TURN gratuit (ex. Cloudflare Calls) pour les réseaux stricts.
 2. Volume et sourdine côté invité.
 3. Indicateur « 1 auditeur connecté » dans le mini-lecteur.
+
+
+---
+
+# RezMusic - Journal de Projet & Idées (v33)
+Date : 3 Novembre 2026
+Auteur de la version : Buffy (agent de code)
+
+## 129. Question de l'utilisateur pour la v33
+- « Comment cette app marche du coup : https://cider.sh/fr ? Ce serait possible de faire quelque chose de similaire ? Mais où on pourrait avoir, comme tu dis, un partage d'écran Discord mais juste de musique : lui se connecte à ma session et reçoit l'audio que je lance, en direct, de son côté. C'est possible ? »
+
+## 130. Vérification faite : Cider n'est PAS un client Spotify
+- Recherche web (sources en bas) : **Cider est un client Apple Music** pour Windows/macOS/Linux (« a community-run Apple Music client »). Il s'appuie sur **MusicKit JS**, les endpoints Apple, un **Widevine CDM** embarqué (Electron build Castlabs, ou WebView2 sous Windows) et un backend local (Izanami). Cider a publiquement indiqué que **Spotify ne peut pas y être intégré** ; seul l'import de playlists Spotify existe.
+- Donc la comparaison initiale était fausse : ni Cider ni « ibaila » ne connectent un compte Spotify dans un site web.
+- Ce qui existe pour Spotify : **Spicetify** (injection dans le client officiel), **Spotube** (API Web officielle, même OAuth que RezMusic), **librespot** (réimplémentation du protocole interne). Aucun n'est transposable à une page statique.
+- Sources : https://cider.sh/ · https://cider.sh/learn-more · https://coredev.uk/blog/four-years-of-cider · https://github.com/ciderapp/Cider-2
+
+## 131. « Partager juste la musique, pas l'écran » : oui, et c'était déjà la v32
+- Le partage de son implémenté en v32 fait exactement cela : l'hôte lance la musique, l'invité rejoint la session et reçoit **l'audio en direct** chez lui, sans Spotify ni Premium.
+- La piste vidéo demandée par le sélecteur de partage est **arrêtée immédiatement** : aucune image ne circule, seul l'audio est envoyé. La v33 le rend explicite dans le texte.
+
+## 132. Ce qui a été fait en v33
+1. Bouton renommé en **« Partager le son (audio seul) »**.
+2. Texte d'état détaillé : « Seul le son est transmis, aucune image de ton écran ne part chez lui » + rappel de cocher « Partager l'audio ».
+3. **Compteur d'auditeurs** : `audioShare.listeners`, affiché « 1 auditeur connecté au direct » / « en attente que ton ami touche Écouter le direct ».
+4. `rtc-stop` géré aussi côté hôte pour remettre le compteur à zéro ; remise à zéro dans `stopAudioShare()`.
+5. Texte de la carte session précisé (audio seul, écran entier si le son sort de l'app Spotify de bureau).
+
+## 133. Fichiers modifiés en v33
+- `index.html` : libellés, texte d'état, compteur d'auditeurs, gestion `rtc-stop` hôte, version affichée v33.
+- `sw.js` : cache passé en `rezmusic-v33`.
+- `README.md` : section « Et Cider ? » corrigée avec sources, mode d'emploi du partage audio seul.
+- `saveia.txt` : cette section (v13 à v32 intactes, ajout seul).
+
+## 134. Vérifications faites en v33
+- `node --check` sur le script extrait : OK.
+- Libellé « Partager le son (audio seul) » présent une fois ; `audioShare.listeners` utilisé dans l'état, la connexion, l'arrêt et le message `rtc-stop`.
+- Archive `rezmusic-v33.zip` (4 fichiers) testée (`testzip()` = None) et servie en HTTP 200.
+- **Non vérifié par l'agent** : partage WebRTC réel entre deux appareils (nécessite un second appareil, Chrome/Edge côté hôte). Le compteur d'auditeurs dépend de l'événement `connectionstatechange`, non observable sans second pair.
+
+## 135. Idées suivantes (non faites)
+1. Serveur TURN gratuit pour les réseaux stricts.
+2. Volume et sourdine côté invité.
+3. Choix « partager seulement RezMusic » qui présélectionne l'onglet courant quand le navigateur le permet.
+
+
+---
+
+# RezMusic - Journal de Projet & Idées (v34)
+Date : 3 Novembre 2026
+Auteur de la version : Buffy (agent de code)
+
+## 136. Demandes de l'utilisateur pour la v34
+- « J'ai pris un compte sans abonnement pour essayer et impossible d'avoir le jeton Spotify sur le site car je n'ai pas le Premium, donc mon ami ne peut pas relier son compte. Peux-tu faire en sorte qu'on puisse relier son compte Spotify sans token ? »
+- « Ajoute une fonctionnalité pour relier son compte YouTube via Google pour avoir accès à la recherche de sons via YouTube pour ceux qui n'ont pas de Spotify. »
+
+## 137. Réponse honnête sur le jeton Spotify
+- **On ne peut pas se connecter à Spotify sans jeton** : le jeton EST le résultat du login. L'utilisateur tape son e-mail et son mot de passe chez Spotify, Spotify renvoie un jeton à l'app (OAuth PKCE). Aucune variante n'existe.
+- **Le Premium n'est pas requis pour obtenir le jeton** : l'autorisation OAuth et l'API Web fonctionnent avec un compte gratuit (recherche, playlists, profil). Seule la **lecture audio dans le navigateur** exige Premium (Web Playback SDK).
+- La capture de l'utilisateur montre que la clé `3a9cd2cd1d445e693501c9e29a7b3` (29 caractères) est **toujours** dans le champ : c'est ce Client ID invalide qui bloque, pas l'abonnement.
+- Le tableau « Spotify Soloist / Premium requis » du tableau de bord développeur concerne un autre produit (clés API Spotify), pas RezMusic.
+
+## 138. Ce qui a été fait en v34 : YouTube
+1. **Carte Réglages « Recherche YouTube (sans Spotify) »** : champ `#youtube-api-key`, bouton d'enregistrement, état de la clé, mode d'emploi dépliable (Google Cloud → activer YouTube Data API v3 → créer une clé → restreindre au site). Quota gratuit 10 000 unités/jour ≈ 100 recherches.
+2. **`sourceYouTube(term)`** : appel `youtube/v3/search` (type=video, `videoCategoryId=10` puis sans filtre si vide), transformation en pistes RezMusic (`id: yt-<videoId>`, `source: 'youtube'`, `videoId`, miniature, chaîne).
+3. **Recherche** : sans Spotify connecté et avec une clé YouTube, YouTube devient la source ; repli iTunes/Deezer sinon.
+4. **Lecture YouTube** : API IFrame officielle chargée à la demande, `YT.Player` dans un conteneur 16/9 visible, autoplay, `playsinline`. Boutons ▶/❚❚, suivant/précédent, volume (`setVolume`), barre de progression (`seekTo`) et temps (ticker 500 ms) branchés dessus. `stopYouTube()` au passage en extrait 30 s. État de lecture transmis à la session.
+5. Boutons de résultat (recherche **et** bibliothèque) : un morceau YouTube est toujours jouable et n'affiche pas « extrait indisponible ».
+
+## 139. Fichiers modifiés en v34
+- `index.html` : carte YouTube, conteneur lecteur, CSS, module JS YouTube, intégration recherche/lecture/volume/progression/session, version affichée v34.
+- `sw.js` : cache passé en `rezmusic-v34`.
+- `README.md` : sections « Musique sans Spotify » et clarification jeton/Premium.
+- `saveia.txt` : cette section (v13 à v33 intactes, ajout seul).
+
+## 140. Vérifications faites en v34
+- `node --check` sur le script extrait : OK.
+- Éléments ajoutés uniques : `youtube-embed`, `youtube-player`, `youtube-api-key`, `btn-save-youtube-key`, `youtube-key-state`.
+- Fonctions YouTube déclarées une fois chacune.
+- `stopYouTube()` dans `startPreview` ; branche YouTube dans `playIndex`.
+- Archive `rezmusic-v34.zip` (4 fichiers) testée (`testzip()` = None) et servie en HTTP 200.
+- **Non vérifié par l'agent** : appel réel à l'API YouTube (clé Google valide requise) et lecture réelle d'une vidéo dans l'iframe.
+
+## 141. Idées suivantes (non faites)
+1. Connexion Google (OAuth) pour récupérer les playlists YouTube de l'utilisateur.
+2. Clé YouTube intégrée par défaut côté propriétaire.
+3. Filtrer les vidéos sans audio.

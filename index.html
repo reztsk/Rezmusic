@@ -1283,6 +1283,25 @@
     .nav-icon {
       font-size: 18px;
     }
+    /* Lecteur YouTube */
+    .youtube-embed {
+      display: none;
+      width: 100%;
+      max-width: 360px;
+      margin: 12px auto;
+      border-radius: 12px;
+      overflow: hidden;
+      background: #000;
+      aspect-ratio: 16 / 9;
+    }
+    .youtube-embed iframe,
+    .youtube-embed > div {
+      width: 100%;
+      height: 100%;
+      border: 0;
+      display: block;
+    }
+
     /* Aide connexion Spotify */
     .help-box {
       border: 1px solid var(--card-border);
@@ -1479,6 +1498,9 @@
       <div class="spotify-embed" id="spotify-embed">
         <iframe id="spotify-embed-frame" title="Lecteur Spotify" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
       </div>
+      <div class="youtube-embed" id="youtube-embed">
+        <div id="youtube-player"></div>
+      </div>
       <div class="player-title" id="current-track-title">Aucun titre sélectionné</div>
       <div class="player-artist" id="current-track-artist">Cherchez un morceau pour commencer</div>
       <div class="progress-row">
@@ -1580,7 +1602,7 @@
       <p>Créez une session et envoyez le code à un ami : il verra en direct ce que vous écoutez, sur son propre appareil.</p>
       <p><strong>Deux façons d'écouter ensemble :</strong></p>
       <p>1. <strong>Sans Premium, chacun sur son Spotify</strong> : l'invité touche « Ouvrir ce titre dans mon Spotify » et lance le même morceau dans son application, gratuitement.</p>
-      <p>2. <strong>Le son direct depuis cette app</strong> : l'hôte (sur ordinateur, Chrome ou Edge) touche « Partager le son de mon PC », choisit l'onglet ou l'écran en cochant « Partager l'audio », et l'invité touche « Écouter le direct ». Le son arrive alors dans RezMusic, sans Spotify côté invité. Limites : iOS ne permet pas de capturer le son d'une autre application, le partage s'arrête si l'hôte ferme l'onglet, et certains réseaux très stricts (entreprises) bloquent la connexion directe.</p>
+      <p>2. <strong>Le son direct depuis cette app</strong> : l'hôte (sur ordinateur, Chrome ou Edge) touche « Partager le son (audio seul) », choisit l'onglet (ou l'écran entier si le son sort de l'app Spotify de bureau) en cochant « Partager l'audio », et l'invité touche « Écouter le direct ». <strong>Seul le son est transmis</strong> : la piste vidéo est coupée immédiatement, aucune image de l'écran ne part chez l'invité. Le son arrive alors dans RezMusic, sans Spotify côté invité. Limites : iOS ne permet pas de capturer le son d'une autre application, le partage s'arrête si l'hôte ferme l'onglet, et certains réseaux très stricts (entreprises) bloquent la connexion directe.</p>
       <div id="session-status" class="search-hint">Session inactive.</div>
       <button class="btn" id="btn-create-session">Créer une session</button>
       <div class="session-code" id="session-code" style="display: none;">······</div>
@@ -1600,7 +1622,7 @@
       <div id="session-live"></div>
 
       <div id="session-share" style="display: none; margin-top: 12px;">
-        <button class="mode-btn" id="btn-share-audio" style="width: 100%;">&#128266; Partager le son de mon PC</button>
+        <button class="mode-btn" id="btn-share-audio" style="width: 100%;">&#128266; Partager le son (audio seul)</button>
         <button class="mode-btn" id="btn-stop-share" style="width: 100%; display: none;">Arrêter le partage</button>
         <div class="search-hint" id="share-status"></div>
       </div>
@@ -1740,6 +1762,23 @@
     </div>
 
     <div class="card">
+      <h2>Recherche YouTube (sans Spotify)</h2>
+      <p>Tu n'as pas de compte Spotify ? RezMusic peut chercher et jouer les morceaux avec <strong>YouTube</strong>, sans aucun abonnement. Il faut une clé API Google gratuite, enregistrée une fois.</p>
+      <input class="search-input" id="youtube-api-key" maxlength="80" placeholder="Clé API YouTube Data v3" autocomplete="off" spellcheck="false">
+      <button class="mode-btn" id="btn-save-youtube-key" style="width: 100%; margin-top: 8px;">Enregistrer la clé YouTube</button>
+      <div class="search-hint" id="youtube-key-state">Aucune clé enregistrée.</div>
+      <details class="help-box" style="margin-top: 12px;">
+        <summary>Comment obtenir cette clé (gratuit, 5 minutes)</summary>
+        <ol>
+          <li>Ouvre <em>console.cloud.google.com</em> et crée un projet.</li>
+          <li>« API et services » → « Bibliothèque » → active <strong>YouTube Data API v3</strong>.</li>
+          <li>« Identifiants » → « Créer des identifiants » → <strong>Clé API</strong>. Restreins-la à ton site (HTTP referrers).</li>
+          <li>Colle la clé ci-dessus. Quota gratuit : 10 000 unités par jour, environ 100 recherches.</li>
+        </ol>
+      </details>
+    </div>
+
+    <div class="card">
       <h2>Format d'affichage</h2>
       <p>Détecté automatiquement : <strong id="layout-state">Téléphone</strong>. Vous pouvez forcer un format.</p>
       <div class="mode-row">
@@ -1757,7 +1796,7 @@
 
     <div class="card">
       <h2>À propos de RezMusic</h2>
-      <p>Version v32 • Partage du son en direct dans l'app (WebRTC, l'invité écoute sans Spotify), bouton « Ouvrir ce titre dans mon Spotify » pour écouter à plusieurs sans Premium, connexion Spotify pour tous (e-mail et mot de passe, aucun compte développeur pour tes amis), aide intégrée, Client ID modifiable dans les Réglages, écran de lancement animé, compte Spotify lié à cet appareil (jamais partagé), sessions d'écoute à plusieurs (le code marche même sans compte Spotify), format PC et téléphone détecté automatiquement, paroles synchronisées, extraits 30 s optionnels, pochette carrée, néon rouge, playlists déroulantes, volume, historique des sons écoutés, profils avec code personnel et lecture complète Spotify (Premium requis).</p>
+      <p>Version v34 • Recherche et lecture YouTube sans Spotify (clé API gratuite), Partage du son en direct dans l'app, audio seul sans aucune image (WebRTC, l'invité écoute sans Spotify), bouton « Ouvrir ce titre dans mon Spotify » pour écouter à plusieurs sans Premium, connexion Spotify pour tous (e-mail et mot de passe, aucun compte développeur pour tes amis), aide intégrée, Client ID modifiable dans les Réglages, écran de lancement animé, compte Spotify lié à cet appareil (jamais partagé), sessions d'écoute à plusieurs (le code marche même sans compte Spotify), format PC et téléphone détecté automatiquement, paroles synchronisées, extraits 30 s optionnels, pochette carrée, néon rouge, playlists déroulantes, volume, historique des sons écoutés, profils avec code personnel et lecture complète Spotify (Premium requis).</p>
     </div>
   </div>
 
@@ -2161,7 +2200,9 @@
 
       return (preferSpotify
         ? sourceSpotify(cleaned).catch(function () { return sourceItunes(cleaned); })
-        : sourceItunes(cleaned)
+        : (youtubeReady()
+            ? sourceYouTube(cleaned).catch(function () { return sourceItunes(cleaned); })
+            : sourceItunes(cleaned))
       ).then(function (list) {
         if (list.length) return { list: list };
         return sourceDeezer(cleaned).then(function (deezerList) {
@@ -2205,7 +2246,7 @@
             : '<div class="result-art"></div>') +
           '<div class="result-info">' +
             '<strong>' + escapeHtml(track.title) + '</strong>' +
-            '<span>' + escapeHtml(track.artist) + (track.preview ? '' : ' • extrait indisponible') + '</span>' +
+            '<span>' + escapeHtml(track.artist) + (track.preview || track.source === 'youtube' ? '' : ' • extrait indisponible') + '</span>' +
           '</div>' +
           '<div class="result-actions">' +
             '<button class="icon-btn fav' + (fav ? ' active' : '') + '" data-fav="' + escapeHtml(track.id) + '" title="Favori">♥</button>' +
@@ -2213,7 +2254,7 @@
             (previewsEnabled() && track.preview
               ? '<button class="icon-btn preview" data-preview="' + index + '" title="Écouter l\'extrait 30 s">30</button>'
               : '') +
-            '<button class="icon-btn play" data-play="' + index + '" title="Écouter"' + (track.preview || spotifyConnected() ? '' : ' disabled') + '>▶</button>' +
+            '<button class="icon-btn play" data-play="' + index + '" title="Écouter"' + (track.preview || track.source === 'youtube' || spotifyConnected() ? '' : ' disabled') + '>▶</button>' +
           '</div>' +
         '</div>';
       }).join('');
@@ -2525,6 +2566,11 @@
       updatePlayerUi(track);
       highlightPlaying();
 
+      if (track.source === 'youtube') {
+        playYouTube(track);
+        return;
+      }
+
       if (wantsFull) {
         document.getElementById('player-meta').textContent = 'Connexion à Spotify…';
         playWithSpotify(track).catch(function (error) {
@@ -2550,6 +2596,7 @@
     }
 
     function startPreview(track) {
+      stopYouTube();
       state.playingVia = 'preview';
       audio.volume = currentVolume() / 100;
       stopSpotifyTicker();
@@ -2656,6 +2703,13 @@
     }
 
     function togglePlay() {
+      if (state.playingVia === 'youtube' && ytPlayer) {
+        var ytPlaying = document.getElementById('btn-play').textContent === '❚❚';
+        if (ytPlaying) ytPlayer.pauseVideo();
+        else ytPlayer.playVideo();
+        return;
+      }
+
       if (state.playingVia === 'spotify' && spotifyConnected()) {
         var isPlaying = document.getElementById('btn-play').textContent === '❚❚';
         spotifyApi('/me/player/' + (isPlaying ? 'pause' : 'play'), { method: 'PUT' })
@@ -2828,7 +2882,7 @@
           (playable ? ' data-play-history="' + escapeHtml(track.id) + '"' : '') + '>' +
           '<div class="track-details">' +
             '<strong>' + escapeHtml(track.title) + '</strong>' +
-            '<span>' + escapeHtml(track.artist) + (track.preview ? '' : ' • extrait indisponible') + '</span>' +
+            '<span>' + escapeHtml(track.artist) + (track.preview || track.source === 'youtube' ? '' : ' • extrait indisponible') + '</span>' +
           '</div>' +
           '<div class="stars" data-value="' + rating + '" data-track="' + escapeHtml(track.id) + '">' +
             starsMarkup(rating) +
@@ -3148,6 +3202,11 @@
     document.getElementById('btn-prev').addEventListener('click', playPrevious);
 
     document.getElementById('progress').addEventListener('input', function (event) {
+      if (state.playingVia === 'youtube' && ytPlayer && ytPlayer.getDuration) {
+        var ytTotal = ytPlayer.getDuration() || 0;
+        if (ytTotal) ytPlayer.seekTo((Number(event.target.value) / 100) * ytTotal, true);
+        return;
+      }
       if (state.playingVia === 'spotify') return;
       if (!audio.duration || !isFinite(audio.duration)) return;
       audio.currentTime = (Number(event.target.value) / 100) * audio.duration;
@@ -3302,6 +3361,11 @@
     });
 
     document.getElementById('btn-save-public-client-id').addEventListener('click', savePublicClientId);
+
+    document.getElementById('btn-save-youtube-key').addEventListener('click', saveYoutubeApiKey);
+    document.getElementById('youtube-api-key').addEventListener('keydown', function (event) {
+      if (event.key === 'Enter') saveYoutubeApiKey();
+    });
 
     document.getElementById('btn-copy-redirect').addEventListener('click', function () {
       var address = redirectUri();
@@ -4521,6 +4585,9 @@
     function setVolume(value, persist, remote) {
       var percent = Math.max(0, Math.min(100, Math.round(Number(value) || 0)));
       audio.volume = percent / 100;
+      if (state.playingVia === 'youtube' && ytPlayer && ytPlayer.setVolume) {
+        try { ytPlayer.setVolume(percent); } catch (error) { /* ignore */ }
+      }
 
       var slider = document.getElementById('volume');
       if (slider && Number(slider.value) !== percent) slider.value = percent;
@@ -4798,6 +4865,185 @@
       playIndex(index >= 0 ? index : 0);
     }
 
+    /* ---------- recherche et lecture YouTube (sans Spotify) ---------- */
+    var ytPlayer = null;
+    var ytApiPromise = null;
+    var ytTicker = null;
+
+    function youtubeApiKey() {
+      return (state.db && state.db.settings && state.db.settings.youtubeApiKey) || '';
+    }
+
+    function isValidYouTubeKey(value) {
+      return /^[A-Za-z0-9_-]{20,80}$/.test(String(value || '').trim());
+    }
+
+    function youtubeReady() {
+      return isValidYouTubeKey(youtubeApiKey());
+    }
+
+    function renderYoutubeUi() {
+      var input = document.getElementById('youtube-api-key');
+      if (input && document.activeElement !== input) input.value = youtubeApiKey();
+      var label = document.getElementById('youtube-key-state');
+      if (label) {
+        label.textContent = youtubeReady()
+          ? 'Clé enregistrée : la recherche YouTube est active sur cet appareil.'
+          : 'Aucune clé enregistrée : la recherche utilise iTunes/Deezer (extraits 30 s).';
+      }
+    }
+
+    function saveYoutubeApiKey() {
+      var input = document.getElementById('youtube-api-key');
+      if (!input) return;
+      var value = String(input.value || '').replace(/\s+/g, '');
+      if (!value) {
+        if (state.db.settings) delete state.db.settings.youtubeApiKey;
+        saveDb();
+        renderYoutubeUi();
+        toast('Clé YouTube retirée.');
+        return;
+      }
+      if (!isValidYouTubeKey(value)) {
+        toast('Cette clé ne ressemble pas à une clé API Google (une quarantaine de caractères).');
+        return;
+      }
+      if (!state.db.settings) state.db.settings = {};
+      state.db.settings.youtubeApiKey = value;
+      saveDb();
+      renderYoutubeUi();
+      toast('Clé YouTube enregistrée : cherche un titre pour tester.');
+    }
+
+    function sourceYouTube(term) {
+      var key = youtubeApiKey();
+      function request(withCategory) {
+        var url = 'https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=12' +
+          (withCategory ? '&videoCategoryId=10' : '') +
+          '&q=' + encodeURIComponent(term) + '&key=' + encodeURIComponent(key);
+        return fetch(url).then(function (res) {
+          return res.json().then(function (data) {
+            if (!res.ok) {
+              var message = data && data.error && data.error.message ? data.error.message : 'YouTube a refusé la requête';
+              throw new Error(message);
+            }
+            return (data.items || []).map(function (item) {
+              var snippet = item.snippet || {};
+              var videoId = item.id && item.id.videoId;
+              if (!videoId) return null;
+              var thumbs = snippet.thumbnails || {};
+              return {
+                id: 'yt-' + videoId,
+                title: snippet.title || 'Vidéo YouTube',
+                artist: snippet.channelTitle || 'YouTube',
+                artwork: (thumbs.medium || thumbs.default || {}).url || '',
+                preview: '',
+                duration: 0,
+                source: 'youtube',
+                videoId: videoId
+              };
+            }).filter(Boolean);
+          });
+        });
+      }
+      return request(true).then(function (list) {
+        if (list.length) return list;
+        return request(false);
+      });
+    }
+
+    function loadYouTubeApi() {
+      if (ytApiPromise) return ytApiPromise;
+      ytApiPromise = new Promise(function (resolve, reject) {
+        if (window.YT && window.YT.Player) { resolve(window.YT); return; }
+        var previous = window.onYouTubeIframeAPIReady;
+        window.onYouTubeIframeAPIReady = function () {
+          if (typeof previous === 'function') previous();
+          if (window.YT && window.YT.Player) resolve(window.YT);
+        };
+        var script = document.createElement('script');
+        script.src = 'https://www.youtube.com/iframe_api';
+        script.onerror = function () { reject(new Error('Lecteur YouTube bloqué par le réseau.')); };
+        document.body.appendChild(script);
+        setTimeout(function () {
+          if (window.YT && window.YT.Player) resolve(window.YT);
+        }, 5000);
+      });
+      return ytApiPromise;
+    }
+
+    function stopYouTube() {
+      if (ytTicker) { clearInterval(ytTicker); ytTicker = null; }
+      if (ytPlayer && ytPlayer.stopVideo) {
+        try { ytPlayer.stopVideo(); } catch (error) { /* ignore */ }
+      }
+      var box = document.getElementById('youtube-embed');
+      if (box) box.style.display = 'none';
+    }
+
+    function onYouTubeState(event) {
+      var playing = event.data === 1;
+      document.getElementById('btn-play').textContent = playing ? '❚❚' : '▶';
+      document.getElementById('visualizer').classList.toggle('playing', playing);
+      document.getElementById('visualizer-state').textContent = playing ? 'En lecture' : 'En pause';
+      document.getElementById('player-meta').textContent = playing ? 'En lecture • YouTube' : 'En pause • YouTube';
+      if (playing) {
+        updateMiniPlayer(currentTrack());
+        addToHistory(currentTrack());
+        if (session.isHost) publishSessionState();
+        renderSessionUi();
+      }
+      if (event.data === 0) playNext();
+    }
+
+    function startYouTubeTicker() {
+      if (ytTicker) clearInterval(ytTicker);
+      ytTicker = setInterval(function () {
+        if (state.playingVia !== 'youtube' || !ytPlayer || !ytPlayer.getCurrentTime) return;
+        var position = ytPlayer.getCurrentTime() || 0;
+        var total = ytPlayer.getDuration() || 0;
+        document.getElementById('time-current').textContent = formatTime(position);
+        if (total) {
+          document.getElementById('time-total').textContent = formatTime(total);
+          document.getElementById('progress').value = (position / total) * 100;
+        }
+      }, 500);
+    }
+
+    function playYouTube(track) {
+      if (!track || !track.videoId) return;
+      state.playingVia = 'youtube';
+      ensureDuckingForMode();
+      if (audio && !audio.paused) audio.pause();
+      hideSpotifyEmbed();
+      var box = document.getElementById('youtube-embed');
+      if (box) box.style.display = 'block';
+      document.getElementById('player-meta').textContent = 'Chargement YouTube…';
+      loadYouTubeApi().then(function (YT) {
+        if (!ytPlayer) {
+          ytPlayer = new YT.Player('youtube-player', {
+            height: '200',
+            width: '100%',
+            videoId: track.videoId,
+            playerVars: { autoplay: 1, rel: 0, playsinline: 1 },
+            events: {
+              onReady: function (event) {
+                event.target.setVolume(currentVolume());
+                event.target.playVideo();
+              },
+              onStateChange: onYouTubeState
+            }
+          });
+        } else {
+          ytPlayer.loadVideoById(track.videoId);
+          if (ytPlayer.setVolume) ytPlayer.setVolume(currentVolume());
+        }
+        startYouTubeTicker();
+      }).catch(function (error) {
+        toast(error.message);
+      });
+    }
+
     /* ---------- session partagee (MQTT public, sans compte) ---------- */
     var SESSION_BROKER = 'wss://broker.emqx.io:8084/mqtt';
     var session = {
@@ -4939,6 +5185,7 @@
       var track = currentTrack();
       var playing = false;
       if (state.playingVia === 'spotify' && spotify.lastState) playing = !spotify.lastState.paused;
+      else if (state.playingVia === 'youtube' && ytPlayer && ytPlayer.getPlayerState) playing = ytPlayer.getPlayerState() === 1;
       else if (audio.src) playing = !audio.paused;
       var profile = activeProfile();
 
@@ -5141,7 +5388,7 @@
     }
 
     /* ---------- partage de son en direct (WebRTC) ---------- */
-    var audioShare = { stream: null, pc: null, active: false };
+    var audioShare = { stream: null, pc: null, active: false, listeners: 0 };
     var listenPeer = null;
     var sessionRemoteAudio = null;
 
@@ -5171,9 +5418,16 @@
       if (stopBtn) stopBtn.style.display = audioShare.stream ? 'block' : 'none';
       if (listenBtn) listenBtn.style.display = sessionRemoteAudio && sessionRemoteAudio.srcObject ? 'none' : 'block';
       if (status) {
-        if (audioShare.stream) status.textContent = 'Partage actif : le son part de la fenêtre que tu as choisie.';
-        else if (!shareSupported()) status.textContent = 'Ce navigateur ne sait pas partager le son (iPhone/iPad notamment). Depuis un ordinateur, Chrome ou Edge fonctionnent.';
-        else status.textContent = 'Choisis l\'onglet ou l\'écran en cochant « Partager l\'audio ». Sans cette case, l\'invité n\'entendra rien.';
+        if (audioShare.stream) {
+          status.textContent = 'Partage actif : ' + (audioShare.listeners > 0
+            ? audioShare.listeners + (audioShare.listeners > 1 ? ' auditeurs connectés' : ' auditeur connecté') + ' au direct.'
+            : 'en attente que ton ami touche « Écouter le direct ».') +
+            ' Seul le son est transmis, aucune image de ton écran ne part chez lui.';
+        } else if (!shareSupported()) {
+          status.textContent = 'Ce navigateur ne sait pas partager le son (iPhone/iPad notamment). Depuis un ordinateur, Chrome ou Edge fonctionnent.';
+        } else {
+          status.textContent = 'Choisis l\'onglet ou l\'écran en cochant « Partager l\'audio ». Sans cette case, l\'invité n\'entendra rien. Aucune image n\'est jamais envoyée : la vidéo est coupée dès le départ.';
+        }
       }
     }
 
@@ -5199,10 +5453,15 @@
           if (event.candidate) publishSessionMessage({ type: 'rtc-ice', from: session.clientId, ice: event.candidate });
         };
         pc.onconnectionstatechange = function () {
-          if (pc.connectionState === 'connected') toast('Un auditeur est connecté au direct.');
+          if (pc.connectionState === 'connected') {
+            audioShare.listeners = 1;
+            toast('Un auditeur est connecté au direct.');
+          }
           if (pc.connectionState === 'failed' || pc.connectionState === 'disconnected') {
+            audioShare.listeners = 0;
             toast('Connexion du direct interrompue (réseau trop strict ?).');
           }
+          renderShareUi();
         };
         return pc.createOffer({ offerToReceiveAudio: false }).then(function (offer) {
           return pc.setLocalDescription(offer);
@@ -5225,6 +5484,7 @@
         try { audioShare.pc.close(); } catch (error) { /* ignore */ }
       }
       audioShare.pc = null;
+      audioShare.listeners = 0;
       if (session.code) publishSessionMessage({ type: 'rtc-stop', from: session.clientId });
       renderShareUi();
     }
@@ -5286,6 +5546,12 @@
         var peer = session.isHost ? audioShare.pc : listenPeer;
         if (!peer) return true;
         peer.addIceCandidate(new RTCIceCandidate(data.ice)).catch(function () { /* ignore */ });
+        return true;
+      }
+
+      if (data.type === 'rtc-stop' && session.isHost) {
+        audioShare.listeners = 0;
+        renderShareUi();
         return true;
       }
 
@@ -5455,6 +5721,7 @@
     renderClientIdWarning();
     renderPublicClientId();
     renderRedirectUriHelp();
+    renderYoutubeUi();
     renderPlaylists();
     restoreSpotifySession();
     handleSpotifyRedirect();
