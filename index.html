@@ -290,13 +290,12 @@
     }
     .player-art {
       display: none;
-      width: 100%;
+      width: min(100%, 320px);
       aspect-ratio: 1 / 1;
-      max-height: 220px;
       object-fit: cover;
       border-radius: 14px;
       background: #202024;
-      margin-bottom: 14px;
+      margin: 0 auto 14px;
     }
     .player-art.visible {
       display: block;
@@ -1099,6 +1098,154 @@
       margin: 10px 0 0;
     }
 
+    .lyric-line {
+      padding: 4px 0;
+      color: rgba(255, 255, 255, 0.42);
+      transition: color 0.25s ease, transform 0.25s ease;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .lyric-line.active {
+      color: #ffffff;
+      font-weight: 600;
+      transform: scale(1.02);
+      text-shadow: 0 0 12px rgba(255, 45, 45, 0.55);
+    }
+
+    .btn,
+    .chip-btn,
+    .mode-btn,
+    .playlist-box,
+    .play-btn-circle,
+    .mini-btn.play {
+      box-shadow: 0 0 0 1px rgba(255, 45, 45, 0.28), 0 0 10px rgba(255, 30, 30, 0.22), 0 0 22px rgba(255, 20, 20, 0.12);
+      transition: box-shadow 0.25s ease, background 0.2s ease;
+    }
+    .btn:hover,
+    .chip-btn:hover,
+    .mode-btn:hover,
+    .playlist-box:hover {
+      box-shadow: 0 0 0 1px rgba(255, 60, 60, 0.55), 0 0 16px rgba(255, 30, 30, 0.35), 0 0 32px rgba(255, 20, 20, 0.2);
+    }
+
+    /* Session partagee */
+    .session-live-card {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: #202024;
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 10px;
+      margin-bottom: 8px;
+    }
+    .session-live-card img,
+    .session-live-card .placeholder {
+      width: 46px;
+      height: 46px;
+      border-radius: 8px;
+      object-fit: cover;
+      background: #131315;
+      flex-shrink: 0;
+    }
+    .session-live-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .session-live-info strong {
+      display: block;
+      font-size: 13px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .session-live-info span {
+      display: block;
+      font-size: 11px;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .session-person {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      padding: 6px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .session-person:last-child {
+      border-bottom: none;
+    }
+
+    /* Format telephone */
+    html[data-layout="phone"] body {
+      max-width: 520px;
+      padding: 18px 14px 120px;
+    }
+    html[data-layout="phone"] .section-heading {
+      font-size: 24px;
+    }
+    html[data-layout="phone"] .playlists-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+    html[data-layout="phone"] .player-art {
+      width: min(100%, 260px);
+    }
+    html[data-layout="phone"] .nav-bar {
+      max-width: 100%;
+    }
+    .mode-row .mode-btn.active {
+      color: #fff;
+      font-weight: 600;
+      box-shadow: inset 0 0 0 1px rgba(255, 60, 60, 0.75), 0 0 16px rgba(255, 30, 30, 0.28);
+    }
+
+    /* Format PC */
+    html[data-layout="pc"] body {
+      max-width: 1080px;
+      padding: 28px 32px 48px;
+    }
+    html[data-layout="pc"] .section-heading {
+      font-size: 30px;
+    }
+    html[data-layout="pc"] #search-results {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    html[data-layout="pc"] #search-results .result-row {
+      margin-bottom: 0;
+    }
+    html[data-layout="pc"] .playlists-grid {
+      grid-template-columns: repeat(4, 1fr);
+    }
+    html[data-layout="pc"] .playlists-grid .playlist-box[style] {
+      grid-column: span 1 !important;
+    }
+    html[data-layout="pc"] .player-card,
+    html[data-layout="pc"] .visualizer-card,
+    html[data-layout="pc"] .live-feed-card {
+      max-width: 720px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    html[data-layout="pc"] .player-art {
+      width: min(100%, 300px);
+    }
+    html[data-layout="pc"] .nav-bar {
+      max-width: 1080px;
+      padding-bottom: 12px;
+    }
+    html[data-layout="pc"] .mini-player {
+      max-width: 640px;
+      bottom: 86px;
+    }
+    html[data-layout="pc"] .toast {
+      bottom: 110px;
+    }
+
     /* Bottom Navigation Bar */
     .nav-bar {
       position: fixed;
@@ -1191,7 +1338,7 @@
         <span id="btn-next" title="Suivant">⏭</span>
       </div>
       <div class="player-actions">
-        <button class="chip-btn" id="btn-preview">▶ Extrait 30 s</button>
+        <button class="chip-btn" id="btn-preview" style="display: none;">▶ Extrait 30 s</button>
         <button class="chip-btn" id="btn-lyrics">Paroles</button>
         <button class="chip-btn" id="btn-add-playlist">＋ Playlist</button>
       </div>
@@ -1216,7 +1363,7 @@
         <div class="v-bar"></div>
         <div class="v-bar"></div>
       </div>
-      <div class="visualizer-footer">Extraits 30 s • 100 % gratuit</div>
+      <div class="visualizer-footer" id="visualizer-footer">100 % gratuit</div>
     </div>
 
     <!-- Feed en Direct -->
@@ -1275,15 +1422,27 @@
     <div class="section-subtitle">Partagez vos sessions et découvrez les goûts des autres.</div>
 
     <div class="card">
-      <h2>Session Juke-box</h2>
-      <p>Votre code de session est prêt. Les amis pourront bientôt l'utiliser pour ajouter des musiques et noter les morceaux en direct (la synchronisation entre téléphones demande un petit serveur gratuit).</p>
-      <div class="session-code" id="session-code">······</div>
-      <button class="btn" id="btn-copy-session">Copier le code de session</button>
+      <h2>Session d'écoute</h2>
+      <p>Créez une session et envoyez le code à un ami : il verra en direct ce que vous écoutez, sur son propre appareil. Chacun écoute avec son compte Spotify — un invité sans Spotify voit les titres mais n'entend rien.</p>
+      <div id="session-status" class="search-hint">Session inactive.</div>
+      <button class="btn" id="btn-create-session">Créer une session</button>
+      <div class="session-code" id="session-code" style="display: none;">······</div>
+      <button class="btn secondary" id="btn-copy-session" style="display: none;">Copier le code</button>
+      <button class="btn secondary" id="btn-leave-session" style="display: none;">Quitter la session</button>
     </div>
 
     <div class="card">
-      <h2>Fonctionnement</h2>
-      <p>1. Vous lancez une session. 2. Vos amis rejoignent avec le code. 3. Chacun ajoute un morceau, tout le monde note sur 5. Aucune publicité, aucun abonnement.</p>
+      <h2>Rejoindre une session</h2>
+      <p>Entrez le code à 6 caractères envoyé par l'hôte.</p>
+      <input class="search-input" id="join-code" maxlength="8" placeholder="Code de session" autocomplete="off">
+      <button class="btn secondary" id="btn-join-session">Rejoindre</button>
+    </div>
+
+    <div class="card" id="session-panel" style="display: none;">
+      <h2>En direct</h2>
+      <div id="session-live"></div>
+      <div class="section-eyebrow" style="margin: 14px 0 8px;">Participants</div>
+      <div id="session-people"></div>
     </div>
   </div>
 
@@ -1372,11 +1531,12 @@
 
     <div class="card">
       <h2>Mode de lecture</h2>
-      <p>Choisissez ce que fait un appui sur ▶. L'extrait de 30 s reste toujours accessible avec le bouton « 30 » sur chaque résultat : pratique pour vérifier rapidement qu'on a le bon son.</p>
+      <p>Choisissez ce que fait un appui sur ▶. Les extraits de 30 s sont un choix : activez-les ci-dessous pour faire apparaître le bouton « 30 » dans la recherche et dans le lecteur.</p>
       <div class="mode-row">
         <button class="mode-btn" data-mode="preview">▶ Extrait 30 s</button>
         <button class="mode-btn" data-mode="spotify">♪ Lecture complète</button>
       </div>
+      <button class="mode-btn" id="btn-toggle-previews" style="width: 100%; margin-bottom: 10px;">Extraits 30 s : désactivés</button>
       <p id="spotify-state" style="margin-bottom: 10px;">Non connecté</p>
       <button class="btn secondary" id="btn-spotify-connect">Connecter Spotify</button>
     </div>
@@ -1390,6 +1550,16 @@
     </div>
 
     <div class="card">
+      <h2>Format d'affichage</h2>
+      <p>Détecté automatiquement : <strong id="layout-state">Téléphone</strong>. Vous pouvez forcer un format.</p>
+      <div class="mode-row">
+        <button class="mode-btn" data-layout-mode="auto">Auto</button>
+        <button class="mode-btn" data-layout-mode="pc">PC</button>
+        <button class="mode-btn" data-layout-mode="phone">Téléphone</button>
+      </div>
+    </div>
+
+    <div class="card">
       <h2>Mes données</h2>
       <p>Tous les profils, favoris, notes et codes sont enregistrés uniquement dans votre navigateur. Rien n'est envoyé sur un serveur.</p>
       <button class="btn secondary" id="btn-reset">Réinitialiser mes données</button>
@@ -1397,7 +1567,7 @@
 
     <div class="card">
       <h2>À propos de RezMusic</h2>
-      <p>Version v17 • Recherche instantanée, playlists, historique des sons écoutés, lecteur immersif aux couleurs de la pochette, profils avec code personnel et lecture complète Spotify (Premium requis).</p>
+      <p>Version v26 • Sessions d'écoute à plusieurs (le code marche même sans compte Spotify), format PC et téléphone détecté automatiquement, paroles synchronisées, extraits 30 s optionnels, pochette carrée, néon rouge, playlists déroulantes, volume, historique des sons écoutés, profils avec code personnel et lecture complète Spotify (Premium requis).</p>
     </div>
   </div>
 
@@ -1636,6 +1806,7 @@
 
       if (!db.settings || typeof db.settings !== 'object') db.settings = {};
       if (db.settings.playbackMode !== 'spotify') db.settings.playbackMode = 'preview';
+      if (typeof db.settings.previewEnabled !== 'boolean') db.settings.previewEnabled = false;
 
       var exists = db.profiles.some(function (p) { return p.id === db.activeId; });
       if (!exists) db.activeId = db.profiles[0].id;
@@ -1849,7 +2020,9 @@
           '<div class="result-actions">' +
             '<button class="icon-btn fav' + (fav ? ' active' : '') + '" data-fav="' + escapeHtml(track.id) + '" title="Favori">♥</button>' +
             '<button class="icon-btn add" data-add="' + index + '" title="Ajouter à une playlist">＋</button>' +
-            '<button class="icon-btn preview" data-preview="' + index + '" title="Écouter l\'extrait 30 s"' + (track.preview ? '' : ' disabled') + '>30</button>' +
+            (previewsEnabled() && track.preview
+              ? '<button class="icon-btn preview" data-preview="' + index + '" title="Écouter l\'extrait 30 s">30</button>'
+              : '') +
             '<button class="icon-btn play" data-play="' + index + '" title="Écouter"' + (track.preview || spotifyConnected() ? '' : ' disabled') + '>▶</button>' +
           '</div>' +
         '</div>';
@@ -2171,12 +2344,14 @@
         return;
       }
 
-      if (!track.preview) {
+      if (!track.preview || !previewsEnabled()) {
         if (spotifyConnected()) {
           playWithSpotify(track).catch(function (error) { toast(error.message); });
           return;
         }
-        toast('Aucun extrait disponible pour ce titre.');
+        toast(previewsEnabled()
+          ? 'Aucun extrait disponible pour ce titre.'
+          : 'Connecte Spotify ou active les extraits 30 s dans les Réglages.');
         return;
       }
 
@@ -2213,6 +2388,9 @@
         art.classList.remove('visible');
       }
       applyArtworkMood(track);
+      if (document.getElementById('lyrics-box').classList.contains('visible') && lyricsState.trackId !== track.id) {
+        showLyrics(track);
+      }
       document.getElementById('time-total').textContent = track.duration ? formatTime(track.duration) : '0:30';
       document.getElementById('time-current').textContent = '0:00';
       document.getElementById('progress').value = 0;
@@ -2659,14 +2837,7 @@
 
     /* ---------- session juke-box ---------- */
     function ensureSession() {
-      var code = load(OLD_SESSION_KEY, null);
-      if (!code) {
-        code = '';
-        var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-        for (var i = 0; i < 6; i++) code += chars.charAt(Math.floor(Math.random() * chars.length));
-        save(OLD_SESSION_KEY, code);
-      }
-      document.getElementById('session-code').textContent = code;
+      renderSessionUi();
     }
 
     /* ---------- événements ---------- */
@@ -2802,7 +2973,7 @@
     });
 
     document.getElementById('btn-copy-session').addEventListener('click', function () {
-      var code = document.getElementById('session-code').textContent;
+      var code = session.code || document.getElementById('session-code').textContent;
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(code).then(function () {
           toast('Code ' + code + ' copié.');
@@ -3084,6 +3255,25 @@
     });
 
     document.getElementById('btn-lyrics').addEventListener('click', toggleLyrics);
+
+    document.getElementById('btn-toggle-previews').addEventListener('click', function () {
+      setPreviewsEnabled(!previewsEnabled());
+    });
+
+    document.getElementById('btn-create-session').addEventListener('click', createSession);
+    document.getElementById('btn-join-session').addEventListener('click', function () {
+      joinSession(document.getElementById('join-code').value);
+    });
+    document.getElementById('join-code').addEventListener('keydown', function (event) {
+      if (event.key === 'Enter') joinSession(event.target.value);
+    });
+    document.getElementById('btn-leave-session').addEventListener('click', leaveSession);
+
+    document.querySelectorAll('[data-layout-mode]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        setLayoutMode(button.getAttribute('data-layout-mode'));
+      });
+    });
 
     document.querySelectorAll('[data-sound-mode]').forEach(function (button) {
       button.addEventListener('click', function () {
@@ -3574,6 +3764,7 @@
 
     function handleSpotifyState(spotifyState) {
       if (!spotifyState || state.playingVia !== 'spotify') return;
+      if (session.isHost) publishSessionState();
       var duration = Number(spotifyState.duration) || 0;
       var position = Number(spotifyState.position) || 0;
       var paused = !!spotifyState.paused;
@@ -3584,6 +3775,9 @@
       document.getElementById('btn-play').textContent = paused ? '▶' : '❚❚';
       document.getElementById('visualizer').classList.toggle('playing', !paused);
       document.getElementById('visualizer-state').textContent = paused ? 'En pause' : 'En lecture';
+
+      spotify.lastState = spotifyState;
+      spotify.lastStateAt = Date.now();
 
       var current = spotifyState.track_window && spotifyState.track_window.current_track;
       if (current) {
@@ -4042,17 +4236,97 @@
       }
     }
 
+    function previewsEnabled() {
+      return !!(state.db && state.db.settings && state.db.settings.previewEnabled);
+    }
+
+    function setPreviewsEnabled(enabled) {
+      if (!state.db.settings) state.db.settings = {};
+      state.db.settings.previewEnabled = !!enabled;
+      saveDb();
+      renderPreviewSetting();
+      renderResults(state.queue);
+      if (!enabled && state.playingVia === 'preview') {
+        audio.pause();
+        audio.removeAttribute('src');
+      }
+      toast(enabled ? 'Extraits 30 s activés.' : 'Extraits 30 s désactivés.');
+    }
+
+    function renderPreviewSetting() {
+      var button = document.getElementById('btn-toggle-previews');
+      if (button) {
+        button.textContent = 'Extraits 30 s : ' + (previewsEnabled() ? 'activés' : 'désactivés');
+        button.classList.toggle('active', previewsEnabled());
+      }
+      var chip = document.getElementById('btn-preview');
+      if (chip) chip.style.display = previewsEnabled() ? 'inline-flex' : 'none';
+      var footer = document.getElementById('visualizer-footer');
+      if (footer) footer.textContent = previewsEnabled() ? 'Extraits 30 s • 100 % gratuit' : '100 % gratuit';
+    }
+
     function toggleLyrics() {
       var box = document.getElementById('lyrics-box');
       if (!box) return;
       if (box.classList.contains('visible')) {
         box.classList.remove('visible');
         document.getElementById('player-art').classList.add('visible');
+        stopLyricsSync();
         return;
       }
       var track = currentTrack();
       if (!track) { toast('Lancez un morceau.'); return; }
       showLyrics(track);
+    }
+
+    var lyricsState = { lines: [], active: -1, timer: null, trackId: null };
+
+    function playbackPosition() {
+      if (state.playingVia === 'spotify' && spotify.lastState) {
+        var base = (spotify.lastState.position || 0) / 1000;
+        var drift = spotify.lastState.paused ? 0 : (Date.now() - spotify.lastStateAt) / 1000;
+        return base + drift;
+      }
+      return audio.currentTime || 0;
+    }
+
+    function parseSyncedLyrics(raw) {
+      var lines = [];
+      String(raw || '').split('\n').forEach(function (row) {
+        var match = row.match(/^\[(\d{1,2}):(\d{2})(?:[.:](\d{2,3}))?\](.*)$/);
+        if (!match) return;
+        var text = match[4].trim();
+        if (!text) return;
+        var fraction = match[3] ? Number('0.' + match[3]) : 0;
+        lines.push({ time: Number(match[1]) * 60 + Number(match[2]) + fraction, text: text });
+      });
+      return lines;
+    }
+
+    function stopLyricsSync() {
+      if (lyricsState.timer) clearInterval(lyricsState.timer);
+      lyricsState.timer = null;
+      lyricsState.lines = [];
+      lyricsState.active = -1;
+    }
+
+    function startLyricsSync() {
+      stopLyricsSync();
+      if (!lyricsState.lines.length) return;
+      lyricsState.timer = setInterval(function () {
+        if (!lyricsState.lines.length) return;
+        var position = playbackPosition();
+        var index = -1;
+        for (var i = 0; i < lyricsState.lines.length; i++) {
+          if (lyricsState.lines[i].time <= position) index = i;
+          else break;
+        }
+        if (index === lyricsState.active) return;
+        lyricsState.active = index;
+        var nodes = document.querySelectorAll('.lyric-line');
+        nodes.forEach(function (node, i) { node.classList.toggle('active', i === index); });
+        if (nodes[index]) nodes[index].scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 250);
     }
 
     function showLyrics(track) {
@@ -4062,7 +4336,10 @@
 
       box.classList.add('visible');
       document.getElementById('player-art').classList.remove('visible');
+      text.innerHTML = '';
       text.textContent = 'Recherche des paroles…';
+      stopLyricsSync();
+      lyricsState.trackId = track.id;
 
       var query = encodeURIComponent(track.title + ' ' + track.artist);
       fetch('https://lrclib.net/api/search?q=' + query)
@@ -4071,18 +4348,35 @@
           return response.json();
         })
         .then(function (results) {
-          var found = (results || []).filter(function (item) {
-            return item && (item.plainLyrics || item.syncedLyrics);
-          })[0];
+          if (lyricsState.trackId !== track.id) return;
+
+          var list = (results || []).filter(function (item) {
+            return item && (item.syncedLyrics || item.plainLyrics);
+          });
+          var synced = list.filter(function (item) { return item.syncedLyrics; })[0];
+          var found = synced || list[0];
+
           if (!found) {
             text.textContent = 'Paroles introuvables pour ce morceau.';
             return;
           }
-          var lyrics = found.plainLyrics;
-          if (!lyrics && found.syncedLyrics) {
-            lyrics = found.syncedLyrics.replace(/\[\d{2}:\d{2}(\.\d{2,3})?\]/g, '').replace(/\n{3,}/g, '\n\n');
+
+          var lines = synced ? parseSyncedLyrics(synced.syncedLyrics) : [];
+          if (lines.length) {
+            text.innerHTML = '';
+            lines.forEach(function (line) {
+              var div = document.createElement('div');
+              div.className = 'lyric-line';
+              div.textContent = line.text;
+              text.appendChild(div);
+            });
+            lyricsState.lines = lines;
+            lyricsState.active = -1;
+            startLyricsSync();
+            return;
           }
-          text.textContent = lyrics || 'Paroles indisponibles.';
+
+          text.textContent = found.plainLyrics || 'Paroles indisponibles.';
         })
         .catch(function () {
           text.textContent = 'Impossible de charger les paroles (connexion ou service indisponible).';
@@ -4096,6 +4390,386 @@
       var index = state.queue.findIndex(function (track) { return track.id === trackId; });
       playIndex(index >= 0 ? index : 0);
     }
+
+    /* ---------- session partagee (MQTT public, sans compte) ---------- */
+    var SESSION_BROKER = 'wss://broker.emqx.io:8084/mqtt';
+    var session = {
+      code: null,
+      topic: null,
+      client: null,
+      isHost: false,
+      heartbeat: null,
+      remote: null,
+      people: {},
+      clientId: 'rez_' + Math.random().toString(16).slice(2, 10),
+      status: 'inactive'
+    };
+
+    function normalizeSessionCode(value) {
+      return String(value || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
+    }
+
+    function newSessionCode() {
+      var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+      var code = '';
+      for (var i = 0; i < 6; i++) code += chars.charAt(Math.floor(Math.random() * chars.length));
+      return code;
+    }
+
+    function loadMqtt() {
+      if (window.mqtt) return Promise.resolve(window.mqtt);
+      return new Promise(function (resolve, reject) {
+        var script = document.createElement('script');
+        script.src = 'https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js';
+        script.onload = function () {
+          if (window.mqtt) resolve(window.mqtt);
+          else reject(new Error('Bibliothèque de session indisponible.'));
+        };
+        script.onerror = function () { reject(new Error('Session bloquée par le réseau ou la page.')); };
+        document.body.appendChild(script);
+      });
+    }
+
+    function createSession() {
+      startSession(newSessionCode(), true);
+    }
+
+    function joinSession(value) {
+      var code = normalizeSessionCode(value);
+      if (code.length !== 6) { toast('Le code de session fait 6 caractères.'); return; }
+      startSession(code, false);
+    }
+
+    function startSession(code, isHost) {
+      leaveSession(true);
+      session.code = code;
+      session.topic = 'rezmusic/session/' + code;
+      session.isHost = isHost;
+      session.people = {};
+      session.remote = null;
+      session.status = 'connecting';
+      renderSessionUi();
+
+      loadMqtt().then(function (mqtt) {
+        var client = mqtt.connect(SESSION_BROKER, {
+          clientId: session.clientId + '_' + Math.random().toString(16).slice(2, 6),
+          clean: true,
+          connectTimeout: 8000,
+          reconnectPeriod: 4000
+        });
+        session.client = client;
+
+        client.on('connect', function () {
+          session.status = 'online';
+          client.subscribe(session.topic);
+          publishPresence('join');
+          if (session.isHost) publishSessionState();
+          if (session.heartbeat) clearInterval(session.heartbeat);
+          session.heartbeat = setInterval(function () {
+            if (session.isHost) publishSessionState();
+            else publishPresence('hello');
+            renderSessionUi();
+          }, 5000);
+          renderSessionUi();
+        });
+
+        client.on('message', function (topic, payload) {
+          handleSessionMessage(payload);
+        });
+
+        client.on('error', function () {
+          session.status = 'error';
+          renderSessionUi();
+        });
+
+        client.on('close', function () {
+          if (session.code) { session.status = 'offline'; renderSessionUi(); }
+        });
+      }).catch(function (error) {
+        session.status = 'error';
+        renderSessionUi();
+        toast(error.message);
+      });
+    }
+
+    function leaveSession(silent) {
+      if (session.heartbeat) clearInterval(session.heartbeat);
+      session.heartbeat = null;
+      if (session.client) {
+        try {
+          publishPresence('bye');
+          session.client.end(true);
+        } catch (error) { /* ignore */ }
+      }
+      session.client = null;
+      session.code = null;
+      session.topic = null;
+      session.isHost = false;
+      session.remote = null;
+      session.people = {};
+      session.status = 'inactive';
+      if (!silent) { renderSessionUi(); toast('Session quittée.'); }
+    }
+
+    function publishPresence(kind) {
+      if (!session.client || !session.code) return;
+      var profile = activeProfile();
+      session.client.publish(session.topic, JSON.stringify({
+        type: kind === 'bye' ? 'bye' : 'presence',
+        id: session.clientId,
+        name: profile ? profile.name : 'Invité',
+        emoji: profile ? profile.emoji : '👤',
+        host: session.isHost,
+        at: Date.now()
+      }));
+    }
+
+    function publishSessionState() {
+      if (!session.client || !session.isHost) return;
+      var track = currentTrack();
+      var playing = false;
+      if (state.playingVia === 'spotify' && spotify.lastState) playing = !spotify.lastState.paused;
+      else if (audio.src) playing = !audio.paused;
+      var profile = activeProfile();
+
+      session.client.publish(session.topic, JSON.stringify({
+        type: 'state',
+        id: session.clientId,
+        hostName: profile ? profile.name : 'Hôte',
+        hostEmoji: profile ? profile.emoji : '🎧',
+        track: track ? {
+          id: track.id,
+          title: track.title,
+          artist: track.artist,
+          artwork: track.artwork || '',
+          spotifyId: track.spotifyId || '',
+          spotifyUri: track.spotifyUri || '',
+          preview: previewsEnabled() ? (track.preview || '') : ''
+        } : null,
+        position: playbackPosition(),
+        playing: playing,
+        at: Date.now()
+      }));
+    }
+
+    function handleSessionMessage(payload) {
+      var data;
+      try { data = JSON.parse(String(payload)); } catch (error) { return; }
+      if (!data || data.id === session.clientId) return;
+
+      if (data.type === 'bye') {
+        delete session.people[data.id];
+        renderSessionUi();
+        return;
+      }
+
+      if (data.type === 'presence') {
+        session.people[data.id] = { name: data.name, emoji: data.emoji, host: !!data.host, at: Date.now() };
+        renderSessionUi();
+        return;
+      }
+
+      if (data.type === 'state') {
+        session.remote = data;
+        session.people[data.id] = {
+          name: data.hostName || 'Hôte',
+          emoji: data.hostEmoji || '🎧',
+          host: true,
+          at: Date.now()
+        };
+        session.status = 'online';
+        renderSessionUi();
+      }
+    }
+
+    function sessionStatusText() {
+      if (!session.code) return 'Session inactive.';
+      if (session.status === 'connecting') return 'Connexion à la session ' + session.code + '…';
+      if (session.status === 'error') return 'Impossible de rejoindre la session (réseau bloqué ?).';
+      if (session.status === 'offline') return 'Connexion interrompue, reconnexion…';
+      if (session.isHost) {
+        var hostTrack = currentTrack();
+        return 'Vous diffusez' + (hostTrack ? ' : ' + hostTrack.title : '') + ' · code ' + session.code;
+      }
+      if (session.remote && session.remote.track) {
+        return 'Vous suivez ' + (session.remote.hostName || 'l\'hôte') + ' en direct.';
+      }
+      if (session.remote) return 'Connecté à ' + (session.remote.hostName || 'l\'hôte') + ' · en attente d\'un titre.';
+      return 'Connecté au code ' + session.code + ' · en attente de l\'hôte…';
+    }
+
+    function renderSessionUi() {
+      var status = document.getElementById('session-status');
+      var codeElement = document.getElementById('session-code');
+      var copyButton = document.getElementById('btn-copy-session');
+      var leaveButton = document.getElementById('btn-leave-session');
+      var createButton = document.getElementById('btn-create-session');
+      var panel = document.getElementById('session-panel');
+      var live = document.getElementById('session-live');
+      var people = document.getElementById('session-people');
+      if (!status || !codeElement) return;
+
+      var active = !!session.code;
+      var visible = active ? '' : 'none';
+      status.textContent = sessionStatusText();
+      codeElement.style.display = active ? 'block' : 'none';
+      codeElement.textContent = active ? session.code : '······';
+      if (createButton) createButton.style.display = active ? 'none' : 'inline-flex';
+      if (copyButton) copyButton.style.display = visible;
+      if (leaveButton) leaveButton.style.display = visible;
+      if (panel) panel.style.display = active ? 'block' : 'none';
+      if (!active) {
+        if (live) live.innerHTML = '';
+        if (people) people.innerHTML = '';
+        return;
+      }
+
+      var shown = null;
+      if (session.isHost) {
+        var own = currentTrack();
+        if (own) {
+          shown = {
+            title: own.title,
+            artist: own.artist,
+            artwork: own.artwork || '',
+            playing: state.playingVia === 'spotify'
+              ? !!(spotify.lastState && !spotify.lastState.paused)
+              : !audio.paused,
+            hostName: activeProfile() ? activeProfile().name : 'Moi',
+            hostEmoji: activeProfile() ? activeProfile().emoji : '🎧'
+          };
+        }
+      } else if (session.remote && session.remote.track) {
+        shown = {
+          title: session.remote.track.title,
+          artist: session.remote.track.artist,
+          artwork: session.remote.track.artwork || '',
+          playing: !!session.remote.playing,
+          hostName: session.remote.hostName || 'Hôte',
+          hostEmoji: session.remote.hostEmoji || '🎧'
+        };
+      }
+
+      if (live) {
+        if (!shown) {
+          live.innerHTML = '<p class="search-hint">' + (session.isHost
+            ? 'Lancez un titre : vos invités verront le morceau en direct.'
+            : 'En attente du premier titre de l\'hôte…') + '</p>';
+        } else {
+          live.innerHTML = '';
+          var card = document.createElement('div');
+          card.className = 'session-live-card';
+          if (shown.artwork) {
+            var image = document.createElement('img');
+            image.src = shown.artwork;
+            image.alt = '';
+            card.appendChild(image);
+          } else {
+            var placeholder = document.createElement('div');
+            placeholder.className = 'placeholder';
+            card.appendChild(placeholder);
+          }
+          var info = document.createElement('div');
+          info.className = 'session-live-info';
+          var title = document.createElement('strong');
+          title.textContent = shown.title;
+          var sub = document.createElement('span');
+          sub.textContent = shown.artist + ' · ' + (shown.playing ? 'en lecture' : 'en pause');
+          info.appendChild(title);
+          info.appendChild(sub);
+          var who = document.createElement('span');
+          who.textContent = shown.hostEmoji + ' ' + shown.hostName;
+          info.appendChild(who);
+          card.appendChild(info);
+          live.appendChild(card);
+        }
+      }
+
+      if (people) {
+        people.innerHTML = '';
+        var ids = Object.keys(session.people);
+        if (!session.isHost) {
+          var hostRow = document.createElement('div');
+          hostRow.className = 'session-person';
+          hostRow.textContent = '🎧 ' + (session.remote && session.remote.hostName ? session.remote.hostName : 'Hôte') + ' · diffuse';
+          people.appendChild(hostRow);
+        }
+        if (!ids.length && session.isHost) {
+          var hint = document.createElement('p');
+          hint.className = 'search-hint';
+          hint.textContent = 'Personne n\'a encore rejoint. Envoyez le code ' + session.code + '.';
+          people.appendChild(hint);
+        }
+        ids.forEach(function (id) {
+          var person = session.people[id];
+          var row = document.createElement('div');
+          row.className = 'session-person';
+          row.textContent = (person.emoji || '👤') + ' ' + (person.name || 'Invité') + (person.host ? ' · hôte' : '');
+          people.appendChild(row);
+        });
+        if (session.isHost) {
+          var selfRow = document.createElement('div');
+          selfRow.className = 'session-person';
+          selfRow.textContent = (activeProfile() ? activeProfile().emoji : '🎧') + ' ' + (activeProfile() ? activeProfile().name : 'Moi') + ' · hôte (vous)';
+          people.appendChild(selfRow);
+        }
+      }
+    }
+
+    /* ---------- format PC / telephone ---------- */
+    var LAYOUT_KEY = 'rezmusic.layoutMode';
+
+    function detectLayout() {
+      var ua = navigator.userAgent || '';
+      var phoneUa = /Android|iPhone|iPod|iPad|Windows Phone|IEMobile|Opera Mini|Mobile/i.test(ua);
+      var touchPoints = navigator.maxTouchPoints || 0;
+      var coarse = false;
+      try {
+        coarse = window.matchMedia('(pointer: coarse)').matches;
+      } catch (error) { coarse = false; }
+      var smallScreen = Math.min(window.innerWidth || 0, window.innerHeight || 0) < 720;
+      if (phoneUa) return 'phone';
+      if (smallScreen && (touchPoints > 1 || coarse)) return 'phone';
+      return 'pc';
+    }
+
+    function layoutMode() {
+      var saved = load(LAYOUT_KEY, 'auto');
+      return (saved === 'pc' || saved === 'phone') ? saved : 'auto';
+    }
+
+    function applyLayout() {
+      var mode = layoutMode();
+      var resolved = mode === 'auto' ? detectLayout() : mode;
+      document.documentElement.setAttribute('data-layout', resolved);
+      var label = document.getElementById('layout-state');
+      if (label) {
+        label.textContent = resolved === 'pc'
+          ? 'PC (' + (mode === 'auto' ? 'détecté' : 'forcé') + ')'
+          : 'Téléphone (' + (mode === 'auto' ? 'détecté' : 'forcé') + ')';
+      }
+      document.querySelectorAll('[data-layout-mode]').forEach(function (button) {
+        button.classList.toggle('active', button.getAttribute('data-layout-mode') === mode);
+      });
+    }
+
+    function setLayoutMode(mode) {
+      save(LAYOUT_KEY, (mode === 'pc' || mode === 'phone') ? mode : 'auto');
+      applyLayout();
+      toast('Format ' + (mode === 'auto' ? 'automatique' : mode === 'pc' ? 'PC' : 'téléphone') + '.');
+    }
+
+    ['play', 'pause', 'ended'].forEach(function (eventName) {
+      audio.addEventListener(eventName, function () {
+        if (session.isHost) publishSessionState();
+        renderSessionUi();
+      });
+    });
+
+    applyLayout();
+    window.addEventListener('resize', applyLayout);
+    window.addEventListener('orientationchange', applyLayout);
+    renderSessionUi();
 
     /* ---------- démarrage ---------- */
     function setGreeting() {
@@ -4145,6 +4819,7 @@
     renderSpotifyNotice();
     setVolume(currentVolume(), false);
     renderSoundMode();
+    renderPreviewSetting();
 
     if ('serviceWorker' in navigator && location.protocol === 'https:') {
       window.addEventListener('load', function () {

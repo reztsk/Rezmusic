@@ -554,3 +554,142 @@ Approche honnête implémentée : le mode Discord **écoute le micro** (autorisa
 2. Synchronisation temps réel entre téléphones (backend gratuit).
 3. File d'attente visuelle modifiable.
 4. Mode clair / sombre.
+
+---
+
+# RezMusic - Journal de Projet & Idées (v24)
+Date : 3 Novembre 2026
+Auteur de la version : Buffy (agent de code)
+
+## 74. Demande de l'utilisateur pour la v24
+1. Il en a assez de **supprimer son dépôt GitHub** à chaque mise à jour, parce qu'il n'arrive pas à l'envoyer.
+2. Il demande si, en installant **l'application Windows de Freebuff**, l'agent pourrait le faire à sa place.
+
+## 75. Réponse honnête sur les possibilités
+- Dans le **chat cloud actuel**, l'agent n'a accès ni au compte GitHub de l'utilisateur, ni à son ordinateur : il ne peut donc pas pousser de commit. Aucun identifiant GitHub n'est disponible et il n'y a pas de navigateur.
+- L'application **Desktop** exécute l'agent sur la machine de l'utilisateur : il peut alors lancer des commandes `git` et utiliser les identifiants déjà configurés sur le PC. Cela reste dépendant de l'authentification locale (Git Credential Manager ou token), que l'agent ne peut pas deviner.
+- La vraie solution durable : **ne plus jamais supprimer le dépôt** et automatiser l'envoi.
+
+## 76. Livrable de la v24 (aucune modification du code de l'application)
+1. **`mettre-a-jour.ps1`** : script Windows à double-cliquer. Il initialise le dépôt au premier lancement (adresse GitHub demandée une seule fois), enregistre les changements, récupère ce qui a été modifié en ligne (`git pull --rebase --autostash`), puis envoie (`git push`). Il ne supprime rien.
+2. **`GUIDE-MISE-A-JOUR.md`** : deux méthodes (script ou upload web), plus les solutions aux erreurs classiques (« Updates were rejected », mot de passe refusé → Personal Access Token, Vercel qui ne redéploie pas, cache du service worker, URI Spotify).
+3. **`.gitignore`** : évite d'envoyer les archives, `.env` et fichiers système.
+4. Nouvelle archive **`rezmusic-v24.zip`** contenant les 4 fichiers du site + ces 3 fichiers d'aide.
+
+## 77. Pourquoi l'utilisateur devait supprimer son dépôt
+Cause la plus fréquente : modifications faites à la fois sur le site GitHub et localement, puis `push` refusé (« Updates were rejected because the remote contains work that you do not have locally »). La suppression du dépôt semble alors la seule issue. Le script règle ce cas avec `pull --rebase`, et le guide explique la marche à suivre sans rien supprimer.
+
+## 78. Fichiers ajoutés en v24
+- `mettre-a-jour.ps1`
+- `GUIDE-MISE-A-JOUR.md`
+- `.gitignore`
+- `rezmusic-v24.zip`
+
+## 79. Vérifications faites en v24
+- Archive recréée et testée (intégrité + liste des fichiers).
+- Script relu : aucune commande destructive, pas de `--force`, pas de suppression de dépôt.
+- Site inchangé fonctionnellement (même `index.html` qu'en v23).
+- Correction cosmétique : la carte « À propos » affichait encore « Version v17 » alors que le code était en v23. Elle affiche désormais **v24**, ce qui permet de vérifier d'un coup d'œil que la bonne version est en ligne après un envoi sur GitHub.
+
+---
+
+# RezMusic - Journal de Projet & Idées (v25)
+Date : 3 Novembre 2026
+Auteur de la version : Buffy (agent de code)
+
+## 80. Demandes de l'utilisateur pour la v25
+1. Enlever l'extrait de 30 s qui s'affiche partout : en faire une **option à activer dans les paramètres**.
+2. Le mode Discord dépend du micro et pas du son du PC : il le fait remarquer.
+3. Avoir des **paroles synchronisées** avec la chanson.
+4. Dans le lecteur, la pochette doit être **carrée et à la bonne taille** pour voir toute la cover.
+5. Ajouter un **thème rouge néon fin et légèrement flou** autour des boutons.
+
+## 81. Ce qui a été fait en v25
+1. **Extraits désactivés par défaut** : plus de bouton « 30 » dans la recherche ni de « Extrait 30 s » dans le lecteur tant que l'option n'est pas activée.
+   - Nouvelle option dans Réglages → « Extraits 30 s : activés / désactivés ».
+   - Quand elle est désactivée, la lecture passe par Spotify ; sans Spotify, l'app indique clairement quoi faire au lieu de lancer un extrait au hasard.
+   - Le pied du visualiseur affiche « Extraits 30 s • 100 % gratuit » ou seulement « 100 % gratuit » selon l'option.
+2. **Paroles synchronisées** : LRCLIB fournit deux formats ; l'app préfère `syncedLyrics` (lignes horodatées `[mm:ss.xx]`). Les lignes sont affichées une par une, la ligne en cours est **surlignée et centre automatiquement** la vue, avec une boucle de synchronisation à 250 ms.
+   - La position est prise sur le lecteur Spotify (position + dérive du temps) ou sur l'audio pour un extrait.
+   - Si le morceau n'a que des paroles non horodatées, elles s'affichent en texte simple.
+3. **Pochette carrée** : `width: min(100%, 320px)` + `aspect-ratio: 1/1` + `object-fit: cover`, centrée. Plus d'étirement en bandeau paysage.
+4. **Néon rouge** : anneau très fin (1 px, 28 % d'opacité) + halo flou de 10 px et 22 px sur les boutons, renforcé au survol.
+5. Le texte des Réglages explique désormais que l'extrait est optionnel.
+
+## 82. Sur le mode Discord (limite rappelée)
+L'utilisateur a raison : le mode Discord **écoute le microphone**, pas la sortie audio du PC. Un site web n'a aucun accès au mixage des autres applications. Le mode reste utile quand Discord sort des haut-parleurs ; avec un casque il ne capte que la voix de l'utilisateur. Aucune solution web ne permet de faire mieux, c'est une limite du navigateur et non du code.
+
+## 83. Fichiers modifiés en v25
+- `index.html` : option extraits, paroles synchronisées, pochette carrée, néon rouge.
+- `sw.js` : cache passé en `rezmusic-v25`.
+- `README.md` : mise à jour.
+- `saveia.txt` : cette section (v13 à v24 intactes).
+
+## 84. Vérifications faites en v25
+- Syntaxe JavaScript : `node --check` OK.
+- Identifiants d'éléments : aucun manquant, aucun doublon.
+- Fonctions : toutes déclarées (`previewsEnabled`, `renderPreviewSetting`, `parseSyncedLyrics`, `startLyricsSync`, `stopLyricsSync`, `playbackPosition`).
+- Archive `rezmusic-v25.zip` recréée et testée.
+- Sur demande de l'utilisateur, l'archive ne contient plus que les **4 fichiers de base** (`index.html`, `sw.js`, `saveia.txt`, `README.md`). Les aides GitHub (`mettre-a-jour.ps1`, `GUIDE-MISE-A-JOUR.md`, `.gitignore`) restent dans le dossier de travail mais sont exclues du zip.
+- Synchronisation visuelle des paroles : à confirmer par l'utilisateur, l'agent n'a pas de lecteur audio réel.
+
+## 85. Idées suivantes (non faites)
+1. Détection automatique de la langue des paroles.
+2. Position de la ligne de paroles mémorisée entre deux ouvertures.
+3. Synchronisation temps réel entre téléphones (backend gratuit).
+4. Mode clair / sombre.
+
+
+---
+
+# RezMusic - Journal de Projet & Idées (v26)
+Date : 3 Novembre 2026
+Auteur de la version : Buffy (agent de code)
+
+## 86. Demandes de l'utilisateur pour la v26
+1. Un ami **sans compte Spotify** peut-il rejoindre une **session d'écoute à plusieurs**, du moment que celui qui la lance a Spotify connecté ?
+2. L'application va être envoyée (hébergée sur Vercel) à un ami pour tester à deux.
+3. Avoir **un format PC et un format téléphone**, que l'application détecte automatiquement.
+
+## 87. Réponse honnête sur le son (à ne pas oublier)
+- **Voir oui, entendre non.** Un invité sans Spotify voit le titre, la pochette, l'artiste, l'état lecture/pause, mais **n'entend rien**.
+- Aucun site web ne peut relayer le son d'un autre appareil : le navigateur interdit de lire la sortie audio de quelqu'un d'autre. Ce n'est pas une limite du code mais du Web.
+- Pour écouter ensemble : chacun lance le même morceau sur son propre compte ; la session sert à être synchronisés sur le même titre.
+- L'interface le dit explicitement dans la carte « Session d'écoute » pour ne pas promettre un flux audio qui n'existe pas.
+
+## 88. Ce qui a été fait en v26
+1. **Sessions d'écoute à plusieurs** (onglet Communauté)
+   - « Créer une session » génère un code à **6 caractères** (alphabet sans I/O/0/1 pour éviter les confusions), l'affiche et permet de le copier.
+   - « Rejoindre une session » accepte le code saisi (majuscules/minuscules, espaces et tirets ignorés, 6 caractères utiles).
+   - Transport : **MQTT public** `wss://broker.emqx.io:8084/mqtt`, topic `rezmusic/session/<CODE>`. Aucun compte, aucune clé, aucune base de données : la bibliothèque `mqtt` est chargée à la demande depuis unpkg uniquement au moment où l'on crée/rejoint une session.
+   - Messages : `presence` (pseudo + avatar + rôle), `bye` (départ), `state` (titre, artiste, pochette, position, lecture/pause). Battement de cœur toutes les 5 s côté hôte, `hello` côté invité.
+   - Panneau « En direct » : carte du morceau en cours avec pochette carrée, artiste, « en lecture » ou « en pause », et liste des participants avec leur avatar.
+   - L'hôte publie un nouvel état immédiatement sur `play`, `pause`, `ended` de l'audio et sur chaque changement d'état du lecteur Spotify, en plus du battement de cœur.
+   - Le code de session est **le seul secret** : toute personne qui l'a peut suivre la session. Un broker public n'offre aucune confidentialité, c'est assumé et documenté.
+2. **Format PC / format téléphone automatique**
+   - Détection : agent utilisateur (Android, iPhone, iPad, Windows Phone, Mobile…), taille d'écran (< 720 px sur le plus petit côté) et pointeur grossier (`pointer: coarse`) / multi-touch.
+   - Mise en page pilotée par `html[data-layout="pc"]` ou `html[data-layout="phone"]`.
+     - **PC** : page 1080 px, recherche en grille 2 colonnes, playlists sur 4 colonnes, lecteur plus large, barre de navigation élargie.
+     - **Téléphone** : page 520 px, playlists 2 colonnes, pochette 260 px, navigation pleine largeur.
+   - Sélecteur **Auto / PC / Téléphone** dans Réglages → « Format d'affichage », avec le format résolu affiché (« PC (détecté) », « Téléphone (forcé) »…). Le choix est mémorisé dans `rezmusic.layoutMode`, « Auto » remet la détection.
+   - Réévaluation automatique au redimensionnement et à la rotation.
+
+## 89. Fichiers modifiés en v26
+- `index.html` : HTML + CSS de la session, panneau direct, sélecteur de format, module JS session (MQTT), détection de format, version affichée v26.
+- `sw.js` : cache passé en `rezmusic-v26`.
+- `README.md` : v26 (sessions, limites, format PC/téléphone, Ctrl + F5).
+- `saveia.txt` : cette section (v13 à v25 intactes, ajout seul).
+
+## 90. Vérifications faites en v26
+- Syntaxe JavaScript : `node --check` sur le script extrait, OK.
+- Identifiants d'éléments : `session-code`, `session-status`, `session-panel`, `session-live`, `session-people`, `join-code`, `btn-create-session`, `btn-join-session`, `btn-leave-session`, `btn-copy-session`, `layout-state` → un seul exemplaire chacun, aucun doublon.
+- Fonctions déclarées une seule fois : `createSession`, `joinSession`, `startSession`, `leaveSession`, `publishPresence`, `publishSessionState`, `handleSessionMessage`, `renderSessionUi`, `detectLayout`, `layoutMode`, `applyLayout`, `setLayoutMode`, `ensureSession`.
+- `ensureSession()` ne réécrit plus le code affiché (elle appelait l'ancienne fonction et pouvait effacer le code de session).
+- Page servie en local en HTTP 200 ; archive `rezmusic-v26.zip` recréée, testée (`testzip()`) et servie en HTTP 200.
+- **Non vérifié par l'agent** : session à deux appareils réels et rendu visuel PC/téléphone sur de vrais appareils (pas de navigateur ni de second appareil ici). À confirmer par l'utilisateur et son ami.
+
+## 91. Idées suivantes (non faites)
+1. Bouton « Lancer ce titre » chez l'invité quand il a Spotify, pour un vrai démarrage à deux clics.
+2. Code de session protégé (mot de passe ou code plus long) pour éviter les curieux.
+3. Afficher le nombre d'auditeurs en direct dans le mini-lecteur.
+4. Questionnaire de préférences pour une file d'attente collective.
