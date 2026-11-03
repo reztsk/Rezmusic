@@ -693,3 +693,56 @@ Auteur de la version : Buffy (agent de code)
 2. Code de session protégé (mot de passe ou code plus long) pour éviter les curieux.
 3. Afficher le nombre d'auditeurs en direct dans le mini-lecteur.
 4. Questionnaire de préférences pour une file d'attente collective.
+
+
+## 92. Correctif v26 - boutons rouges au lieu de verts
+- Retour de l'utilisateur : « quand on sélectionne quelque chose j'aimerais bien que le bouton devienne rouge pas vert » (capture du mode « Son normal » sélectionné en vert).
+- Cause : la variable `--spotify-green` (#1db954) servait à la fois au bouton principal `.btn` et aux états sélectionnés `.mode-btn.active` / `.emoji-btn.selected`.
+- Correction : `--spotify-green` passe à `#ff3b30`, le texte du bouton principal passe en blanc (`#fff` au lieu de `#000`) pour rester lisible sur rouge, et le survol passe de `#1ed760` à `#ff5b52`.
+- Résultat : tout élément sélectionné (Son normal / Son Discord, choix d'avatar, mode d'affichage, boutons principaux) s'allume en **rouge**, cohérent avec le néon rouge de la v25. Aucun autre vert ne subsiste dans la feuille de style.
+- Vérifié : plus aucune occurrence de `#1db954`, `#1ed760` ni `rgba(29, 185, 84)` dans `index.html`; archive `rezmusic-v26.zip` reconstruite (mêmes 4 fichiers) et testée.
+
+- Complément : les 4 dernières teintes vertes (`rgba(29, 185, 84, ...)`) des bordures/fonds sélectionnés et du halo du lecteur passent en `rgba(255, 59, 48, ...)`. Plus aucun vert dans la feuille de style.
+
+
+---
+
+# RezMusic - Journal de Projet & Idées (v27)
+Date : 3 Novembre 2026
+Auteur de la version : Buffy (agent de code)
+
+## 93. Demandes de l'utilisateur pour la v27
+1. Vérifier que **n'importe qui** ouvrant l'application peut connecter **son** compte Spotify, sans jamais accéder à un compte qui n'est pas le sien, « que ça se base en fonction de l'IP ».
+2. Créer une **animation au lancement**, comme une vraie application qui démarre.
+
+## 94. Réponse honnête sur la connexion Spotify et l'IP
+- **C'est déjà le cas, et c'est maintenant visible** : chaque visiteur passe par la page officielle `accounts.spotify.com`, tape ses propres identifiants, et reçoit **son** jeton, stocké uniquement dans **son** navigateur (`localStorage`, clé `rezmusic.spotify.v1`). Aucun serveur RezMusic ne conserve de jeton : rien n'est partageable.
+- La session d'écoute (MQTT) ne transporte que titre, artiste, pochette, position et lecture/pause : **aucun jeton, aucun e-mail, aucune donnée de compte**.
+- **Sur l'IP : non, et volontairement.** Spotify OAuth (PKCE) ne lie pas un jeton à une IP, et le faire serait nuisible : en 4G, en Wi-Fi public ou derrière un VPN l'IP change en cours de session et l'utilisateur serait déconnecté sans raison. La séparation réelle vient du navigateur, pas du réseau.
+- Le seul vrai risque reste **un ordinateur partagé** : la connexion y survit jusqu'à « Se déconnecter ». D'où le nouveau bouton « Mémoriser ma connexion : désactivé » qui garde le jeton dans `sessionStorage` (effacé à la fermeture de l'onglet).
+- Nouveautés techniques : identifiant d'appareil (`rezmusic.device.v1`) affiché dans les Réglages ; un jeton enregistré par un autre appareil est **ignoré et effacé** au chargement ; la déconnexion vide `localStorage` **et** `sessionStorage`.
+
+## 95. Écran de lancement (animation)
+- Overlay plein écran : vinyle en `conic-gradient` rouge néon qui tourne, note de musique en contre-rotation, halo pulsé, nom « RezMusic », sous-titre, barre de chargement animée et trois status (« Démarrage… », « Chargement du lecteur… », « Prêt. »).
+- Durée minimale ~1,25 s ; disparition en fondu puis retrait du DOM. Un clic ou un tap passe immédiatement.
+- Respect de `prefers-reduced-motion` (animations coupées, durée réduite à 300 ms).
+- Filet de sécurité : une animation CSS efface l'écran au bout de 4,2 s même si le JavaScript plante, et le script force la sortie à 3 s. Le défilement de la page est bloqué pendant l'animation puis restauré.
+- Aucun appel réseau : l'animation est purement locale, elle ne retarde pas le chargement des données.
+
+## 96. Fichiers modifiés en v27
+- `index.html` : écran de lancement (HTML + CSS + JS), stockage Spotify lié à l'appareil, bouton « Mémoriser ma connexion », identifiant d'appareil, version affichée v27.
+- `sw.js` : cache passé en `rezmusic-v27`.
+- `README.md` : v27 (section « Comptes Spotify : qui voit quoi », limite IP expliquée).
+- `saveia.txt` : cette section (v13 à v26 intactes, ajout seul).
+
+## 97. Vérifications faites en v27
+- `node --check` sur le script extrait : OK.
+- Nouveaux identifiants uniques : `splash`, `splash-fill`, `splash-status`, `btn-remember-spotify`, `spotify-device`.
+- Écran de lancement présent une seule fois, retiré du DOM après l'animation (plus aucun blocage des clics).
+- Archive `rezmusic-v27.zip` (4 fichiers) testée (`testzip()` = None) et servie en HTTP 200.
+- **Non vérifié par l'agent** : connexion Spotify réelle (compte Premium + URI de redirection côté Spotify) et rendu de l'animation sur un vrai téléphone. À confirmer par l'utilisateur.
+
+## 98. Idées suivantes (non faites)
+1. Choix de la durée de l'animation (courte / normale / désactivée) dans les Réglages.
+2. Animation de transition entre les onglets.
+3. Écran « premier lancement » qui présente les 3 étapes (profil, Spotify, session).

@@ -12,7 +12,7 @@
       --card-border: rgba(255, 255, 255, 0.08);
       --text-main: #ffffff;
       --text-secondary: #8e8e93;
-      --spotify-green: #1db954;
+      --spotify-green: #ff3b30;
       --star-color: #ffc107;
       --live-badge: #ff453a;
     }
@@ -184,7 +184,7 @@
       border: 1px solid var(--card-border);
     }
     .result-row.playing {
-      border-color: rgba(29, 185, 84, 0.6);
+      border-color: rgba(255, 59, 48, 0.6);
     }
     .result-art {
       width: 46px;
@@ -253,7 +253,7 @@
       box-shadow: 0 18px 50px -26px rgba(0, 0, 0, 0.9);
     }
     .player-card.immersive {
-      box-shadow: 0 22px 60px -22px var(--accent, rgba(29, 185, 84, 0.55));
+      box-shadow: 0 22px 60px -22px var(--accent, rgba(255, 59, 48, 0.55));
     }
     .player-bg {
       position: absolute;
@@ -581,12 +581,12 @@
       width: 100%;
       text-decoration: none;
       background-color: var(--spotify-green);
-      color: #000;
+      color: #ffffff;
       transition: background 0.2s;
       font-family: inherit;
     }
     .btn:hover {
-      background-color: #1ed760;
+      background-color: #ff5b52;
     }
     .btn.secondary {
       background: #202024;
@@ -670,7 +670,7 @@
     }
     .emoji-btn.selected {
       border-color: var(--spotify-green);
-      background: rgba(29, 185, 84, 0.15);
+      background: rgba(255, 59, 48, 0.15);
     }
     .person-row {
       display: flex;
@@ -961,7 +961,7 @@
     }
     .mode-btn.active {
       border-color: var(--spotify-green);
-      background: rgba(29, 185, 84, 0.16);
+      background: rgba(255, 59, 48, 0.16);
     }
     .sheet {
       position: fixed;
@@ -1283,9 +1283,136 @@
     .nav-icon {
       font-size: 18px;
     }
+    /* ---------- écran de lancement ---------- */
+    .splash {
+      position: fixed;
+      inset: 0;
+      z-index: 9000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at 50% 38%, #1a0b0d 0%, #0a0a0b 55%, #050506 100%);
+      text-align: center;
+      transition: opacity 0.45s ease, visibility 0.45s ease;
+      animation: splashAutoHide 0.6s ease forwards 4.2s;
+    }
+    .splash.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+    .splash-glow {
+      position: absolute;
+      width: 340px;
+      height: 340px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255, 45, 45, 0.35) 0%, rgba(255, 30, 30, 0.06) 55%, transparent 70%);
+      filter: blur(18px);
+      animation: splashGlow 2.6s ease-in-out infinite;
+    }
+    .splash-inner {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      animation: splashRise 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+    }
+    .splash-disc {
+      width: 96px;
+      height: 96px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background:
+        radial-gradient(circle at 50% 50%, #16161a 0 22%, transparent 23%),
+        conic-gradient(from 0deg, #ff2b2b 0deg, #7a0d0d 120deg, #ff5b52 220deg, #ff2b2b 360deg);
+      box-shadow: 0 0 0 1px rgba(255, 60, 60, 0.55), 0 0 34px rgba(255, 30, 30, 0.45), inset 0 0 22px rgba(0, 0, 0, 0.65);
+      animation: splashSpin 2.4s linear infinite;
+    }
+    .splash-note {
+      font-size: 30px;
+      color: #fff;
+      text-shadow: 0 0 14px rgba(255, 45, 45, 0.9);
+      animation: splashCounterSpin 2.4s linear infinite;
+    }
+    .splash-brand {
+      margin-top: 6px;
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: 2px;
+      color: #fff;
+      text-shadow: 0 0 18px rgba(255, 45, 45, 0.55);
+    }
+    .splash-sub {
+      font-size: 11px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.45);
+    }
+    .splash-bar {
+      margin-top: 14px;
+      width: 168px;
+      height: 3px;
+      border-radius: 99px;
+      background: rgba(255, 255, 255, 0.1);
+      overflow: hidden;
+    }
+    .splash-bar span {
+      display: block;
+      width: 0;
+      height: 100%;
+      border-radius: 99px;
+      background: linear-gradient(90deg, #7a0d0d, #ff3b30, #ff8a80);
+      box-shadow: 0 0 12px rgba(255, 45, 45, 0.75);
+    }
+    .splash-status {
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.35);
+      min-height: 15px;
+    }
+    @keyframes splashSpin {
+      to { transform: rotate(360deg); }
+    }
+    @keyframes splashCounterSpin {
+      to { transform: rotate(-360deg); }
+    }
+    @keyframes splashGlow {
+      0%, 100% { opacity: 0.55; transform: scale(0.92); }
+      50% { opacity: 1; transform: scale(1.06); }
+    }
+    @keyframes splashRise {
+      from { opacity: 0; transform: translateY(14px) scale(0.96); }
+      to { opacity: 1; transform: none; }
+    }
+    @keyframes splashAutoHide {
+      to { opacity: 0; visibility: hidden; pointer-events: none; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .splash-disc,
+      .splash-note,
+      .splash-glow,
+      .splash-inner { animation: none; }
+    }
+
   </style>
 </head>
 <body>
+
+  <!-- Écran de lancement (animation d'ouverture, retiré automatiquement) -->
+  <div id="splash" class="splash">
+    <div class="splash-glow"></div>
+    <div class="splash-inner">
+      <div class="splash-disc">
+        <span class="splash-note">&#9835;</span>
+      </div>
+      <div class="splash-brand">RezMusic</div>
+      <div class="splash-sub">Musique partagée &middot; 100 % gratuite</div>
+      <div class="splash-bar"><span id="splash-fill"></span></div>
+      <div class="splash-status" id="splash-status">Démarrage…</div>
+    </div>
+  </div>
 
   <header>
     <div style="display: flex; align-items: center; gap: 10px;">
@@ -1539,6 +1666,9 @@
       <button class="mode-btn" id="btn-toggle-previews" style="width: 100%; margin-bottom: 10px;">Extraits 30 s : désactivés</button>
       <p id="spotify-state" style="margin-bottom: 10px;">Non connecté</p>
       <button class="btn secondary" id="btn-spotify-connect">Connecter Spotify</button>
+      <p style="margin-top: 14px;">Chaque personne connecte <strong>son propre compte</strong> : le jeton Spotify est gardé uniquement dans ce navigateur et n'est jamais partagé, ni avec la session d'écoute, ni avec les autres visiteurs. Personne ne peut ouvrir ton compte depuis RezMusic, et tu ne peux pas tomber sur le compte de quelqu'un d'autre.</p>
+      <button class="mode-btn" id="btn-remember-spotify" style="width: 100%; margin-top: 10px;">Mémoriser ma connexion : activé</button>
+      <div class="search-hint">Appareil : <span id="spotify-device">----</span> &middot; connexion liée à ce navigateur</div>
     </div>
 
     <div class="card">
@@ -1567,7 +1697,7 @@
 
     <div class="card">
       <h2>À propos de RezMusic</h2>
-      <p>Version v26 • Sessions d'écoute à plusieurs (le code marche même sans compte Spotify), format PC et téléphone détecté automatiquement, paroles synchronisées, extraits 30 s optionnels, pochette carrée, néon rouge, playlists déroulantes, volume, historique des sons écoutés, profils avec code personnel et lecture complète Spotify (Premium requis).</p>
+      <p>Version v27 • Écran de lancement animé, compte Spotify lié à cet appareil (jamais partagé), sessions d'écoute à plusieurs (le code marche même sans compte Spotify), format PC et téléphone détecté automatiquement, paroles synchronisées, extraits 30 s optionnels, pochette carrée, néon rouge, playlists déroulantes, volume, historique des sons écoutés, profils avec code personnel et lecture complète Spotify (Premium requis).</p>
     </div>
   </div>
 
@@ -3098,13 +3228,17 @@
         spotify.refreshToken = null;
         spotify.expiresAt = 0;
         spotify.user = null;
-        try { localStorage.removeItem(SPOTIFY_STORE); } catch (e) { /* ignore */ }
+        clearSpotifyStore();
         renderPlaybackModeUi();
         renderSpotifyPlaylists();
         toast('Spotify déconnecté.');
         return;
       }
       startSpotifyLogin();
+    });
+
+    document.getElementById('btn-remember-spotify').addEventListener('click', function () {
+      setRememberSpotify(!rememberSpotify());
     });
 
     document.getElementById('btn-preview').addEventListener('click', function () {
@@ -3361,6 +3495,76 @@
     var SPOTIFY_SCOPES = 'streaming user-read-email user-read-private playlist-read-private playlist-read-collaborative user-modify-playback-state user-read-playback-state';
     var SPOTIFY_STORE = 'rezmusic.spotify.v1';
 
+    var SPOTIFY_DEVICE_KEY = 'rezmusic.device.v1';
+
+    function spotifyDeviceId() {
+      var id = null;
+      try { id = localStorage.getItem(SPOTIFY_DEVICE_KEY); } catch (error) { id = null; }
+      if (!id) {
+        id = randomString(10).toUpperCase();
+        try { localStorage.setItem(SPOTIFY_DEVICE_KEY, id); } catch (error) { /* ignore */ }
+      }
+      return id;
+    }
+
+    function rememberSpotify() {
+      var settings = state.db && state.db.settings ? state.db.settings : null;
+      return !settings || settings.rememberSpotify !== false;
+    }
+
+    function spotifyStorage() {
+      try {
+        return rememberSpotify() ? window.localStorage : window.sessionStorage;
+      } catch (error) {
+        return window.localStorage;
+      }
+    }
+
+    function saveSpotifyStore(value) {
+      try { spotifyStorage().setItem(SPOTIFY_STORE, JSON.stringify(value)); } catch (error) { /* ignore */ }
+    }
+
+    function loadSpotifyStore() {
+      try {
+        var raw = spotifyStorage().getItem(SPOTIFY_STORE);
+        return raw ? JSON.parse(raw) : null;
+      } catch (error) { return null; }
+    }
+
+    function clearSpotifyStore() {
+      try { localStorage.removeItem(SPOTIFY_STORE); } catch (error) { /* ignore */ }
+      try { sessionStorage.removeItem(SPOTIFY_STORE); } catch (error) { /* ignore */ }
+    }
+
+    function setRememberSpotify(on) {
+      if (!state.db.settings) state.db.settings = {};
+      state.db.settings.rememberSpotify = !!on;
+      saveDb();
+      if (spotify.token) {
+        saveSpotifyStore({
+          token: spotify.token,
+          refreshToken: spotify.refreshToken,
+          expiresAt: spotify.expiresAt,
+          device: spotifyDeviceId()
+        });
+      }
+      renderRememberSpotifyUi();
+      toast(on
+        ? 'Connexion Spotify mémorisée sur cet appareil.'
+        : 'Connexion Spotify oubliée dès que cet onglet se ferme.');
+    }
+
+    function renderRememberSpotifyUi() {
+      var button = document.getElementById('btn-remember-spotify');
+      if (button) {
+        button.textContent = 'Mémoriser ma connexion : ' + (rememberSpotify() ? 'activé' : 'désactivé');
+        button.classList.toggle('active', rememberSpotify());
+      }
+      var device = document.getElementById('spotify-device');
+      if (device) device.textContent = spotifyDeviceId();
+    }
+
+
     var spotify = {
       token: null,
       refreshToken: null,
@@ -3492,16 +3696,21 @@
       spotify.token = token.access_token;
       spotify.refreshToken = token.refresh_token || spotify.refreshToken;
       spotify.expiresAt = Date.now() + (Number(token.expires_in) || 3600) * 1000 - 30000;
-      save(SPOTIFY_STORE, {
+      saveSpotifyStore({
         token: spotify.token,
         refreshToken: spotify.refreshToken,
-        expiresAt: spotify.expiresAt
+        expiresAt: spotify.expiresAt,
+        device: spotifyDeviceId()
       });
     }
 
     function restoreSpotifySession() {
-      var stored = load(SPOTIFY_STORE, null);
+      var stored = loadSpotifyStore();
       if (!stored || !stored.token) return;
+      if (stored.device && stored.device !== spotifyDeviceId()) {
+        clearSpotifyStore();
+        return;
+      }
       spotify.token = stored.token;
       spotify.refreshToken = stored.refreshToken || null;
       spotify.expiresAt = Number(stored.expiresAt) || 0;
@@ -4771,6 +4980,58 @@
     window.addEventListener('orientationchange', applyLayout);
     renderSessionUi();
 
+    /* ---------- animation de lancement ---------- */
+    function bootSplash() {
+      var splash = document.getElementById('splash');
+      if (!splash) return;
+      var fill = document.getElementById('splash-fill');
+      var status = document.getElementById('splash-status');
+      var steps = ['Démarrage…', 'Chargement du lecteur…', 'Prêt.'];
+      var index = 0;
+      var done = false;
+      var started = Date.now();
+      var minimum = 1250;
+      try {
+        if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          minimum = 300;
+        }
+      } catch (error) { /* ignore */ }
+
+      document.body.style.overflow = 'hidden';
+
+      if (fill) {
+        fill.style.transition = 'width 1150ms cubic-bezier(0.2, 0.8, 0.2, 1)';
+        window.requestAnimationFrame(function () { fill.style.width = '100%'; });
+      }
+
+      var ticker = setInterval(function () {
+        index = Math.min(index + 1, steps.length - 1);
+        if (status) status.textContent = steps[index];
+      }, 430);
+
+      function finish() {
+        if (done) return;
+        done = true;
+        clearInterval(ticker);
+        setTimeout(function () {
+          splash.classList.add('hidden');
+          document.body.style.overflow = '';
+          setTimeout(function () {
+            if (splash && splash.parentNode) splash.parentNode.removeChild(splash);
+          }, 500);
+        }, Math.max(0, minimum - (Date.now() - started)));
+      }
+
+      splash.addEventListener('click', function () { minimum = 0; finish(); });
+      splash.addEventListener('touchstart', function () { minimum = 0; finish(); }, { passive: true });
+
+      if (document.readyState === 'complete') finish();
+      else window.addEventListener('load', finish);
+      setTimeout(finish, 3000);
+    }
+
+    bootSplash();
+
     /* ---------- démarrage ---------- */
     function setGreeting() {
       var hour = new Date().getHours();
@@ -4817,6 +5078,7 @@
     handleSpotifyRedirect();
     initSpotifyDiag();
     renderSpotifyNotice();
+    renderRememberSpotifyUi();
     setVolume(currentVolume(), false);
     renderSoundMode();
     renderPreviewSetting();
