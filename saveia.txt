@@ -498,3 +498,59 @@ Depuis la v18, la lecture complète passe par **Spotify**, pas par le lecteur au
 2. Import incrémental des playlists (éviter les doublons).
 3. File d'attente visuelle modifiable.
 4. Mode clair / sombre.
+
+---
+
+# RezMusic - Journal de Projet & Idées (v23)
+Date : 3 Novembre 2026
+Auteur de la version : Buffy (agent de code)
+
+## 66. Demandes de l'utilisateur pour la v23
+1. Une **barre de volume** en haut à droite dans la case du lecteur.
+2. Comment les **amis** relient leur Spotify **sans compte développeur** et **sans abonnement** ?
+3. Dans l'onglet Musique, faire de « Nouvelle playlist » une **petite option** comme les cases au-dessus.
+4. Au clic sur une playlist, un **menu déroulant** montre les sons avec leurs **pochettes d'album**.
+5. Une fonctionnalité **paroles**, affichée **à la place de la pochette**, avec les paroles des sons Spotify.
+6. Le visualiseur doit proposer **Son normal / Son Discord** : en mode Discord, quand quelqu'un parle, le son baisse puis remonte quelques instants après.
+
+## 67. Vérité technique : les paroles
+Spotify **ne fournit pas les paroles via son API publique** : j'ai testé `GET https://api.spotify.com/v1/lyrics/...` → **HTTP 410 (Gone)**, endpoint supprimé. Les paroles visibles dans l'app Spotify viennent d'une API interne, non accessible aux développeurs.
+Solution retenue : **LRCLIB** (`https://lrclib.net/api/search`), service gratuit, sans clé, avec **CORS ouvert** (`access-control-allow-origin: *`) et testé : la recherche « FINIS-LES La Fève » renvoie bien les paroles. Les paroles s'affichent donc à la place de la pochette, avec un bouton « Paroles » pour basculer.
+
+## 68. Vérité technique : le « son Discord »
+Une page web **ne peut pas lire l'audio d'une autre application** (Discord) : le navigateur est isolé, aucune API ne donne accès au mixage des autres logiciels. Le vrai ducking système (comme sur Windows) n'est pas accessible depuis un site.
+Approche honnête implémentée : le mode Discord **écoute le micro** (autorisation demandée) et baisse le volume dès qu'une voix est détectée, puis le remonte **20 secondes** après le retour au silence. Ça fonctionne pour ta propre voix et pour Discord diffusé en haut-parleurs ; avec un casque, le micro ne captera que toi. C'est écrit dans l'application, sans promettre l'impossible.
+
+## 69. Ce qui a été ajouté en v23
+1. **Barre de volume** en haut à droite du lecteur (icône 🔇/🔉/🔊, 0-100), mémorisée par profil, pilotée via `PUT /me/player/volume` pour Spotify et `audio.volume` pour les extraits.
+2. **Paroles** : bouton dédié, chargement LRCLIB, affichage à la place de la pochette, défilement, message clair si introuvables.
+3. **Mode Son normal / Son Discord** dans le visualiseur, avec ducking automatique par le micro (baisse à 35 %, remontée 20 s après la dernière voix).
+4. **« Nouvelle playlist » compacte** : nouvelle case dans la grille, qui ouvre un petit formulaire seulement au clic.
+5. **Playlists déroulantes** : un appui sur le nom déplie la liste des morceaux avec pochette, titre et artiste ; un appui sur un morceau le lance dans la playlist.
+6. Le bouton « Lire » lance la playlist entière, la flèche ▸/▾ indique l'état déplié.
+
+## 70. Réponse à la question « et mes amis sans compte développeur ? »
+- Tes amis **n'ont pas besoin de compte développeur** : le Client ID de l'application est commun, ils cliquent juste sur « Se connecter avec Spotify ».
+- S'ils n'ont **pas Premium**, ils peuvent se connecter, importer leurs playlists, mais la lecture complète restera à 30 s (règle Spotify).
+- Limite actuelle de Spotify : **5 comptes maximum** en mode développement, à ajouter dans *User Management* du tableau de bord. Au-delà : extension de quota (250 000 utilisateurs actifs exigés).
+
+## 71. Fichiers modifiés en v23
+- `index.html` : volume, paroles, mode Discord, playlists déroulantes, nouvelle playlist compacte.
+- `sw.js` : cache passé en `rezmusic-v23`.
+- `README.md` : mise à jour.
+- `saveia.txt` : cette section (v13 à v22 intactes).
+
+## 72. Vérifications faites en v23
+- Syntaxe JavaScript : `node --check` OK.
+- Identifiants d'éléments : aucun manquant, aucun doublon.
+- Fonctions : toutes déclarées.
+- CORS et réponse de LRCLIB testés en direct (HTTP 200, paroles présentes).
+- Spotify `/lyrics` confirmé indisponible (410).
+- Archive `rezmusic-v23.zip` recréée et testée.
+- Ducking par micro : dépend de l'autorisation du navigateur, à confirmer par l'utilisateur.
+
+## 73. Idées suivantes (non faites)
+1. Paroles synchronisées (karaoké) : LRCLIB fournit aussi des timings (`syncedLyrics`).
+2. Synchronisation temps réel entre téléphones (backend gratuit).
+3. File d'attente visuelle modifiable.
+4. Mode clair / sombre.
