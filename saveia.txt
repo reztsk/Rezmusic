@@ -1034,3 +1034,50 @@ Auteur de la version : Buffy (agent de code)
 1. Connexion Google (OAuth) pour récupérer les playlists YouTube de l'utilisateur.
 2. Clé YouTube intégrée par défaut côté propriétaire.
 3. Filtrer les vidéos sans audio.
+
+
+---
+
+# RezMusic - Journal de Projet & Idées (v35)
+Date : 3 Novembre 2026
+Auteur de la version : Buffy (agent de code)
+
+## 142. Découverte majeure : le Client ID du tableau de bord fait bien 29 caractères
+- L'utilisateur a envoyé une capture de `developer.spotify.com/dashboard/3a9cd2cd1d445e693501c9e29a7b3` → **Basic Information** : le Client ID affiché par Spotify est exactement `3a9cd2cd1d445e693501c9e29a7b3`, soit **29 caractères**. L'app tourne en **Development mode**, Redirect URI déjà correcte (`https://rezmusic.vercel.app/`).
+- **Conséquence** : le blocage venait de **notre propre validation** (`/^[0-9a-fA-F]{32}$/`), qui refusait cette valeur légitime avant même d'appeler Spotify. Mon hypothèse « la clé est tronquée » était fausse : c'est Spotify qui fournit 29 caractères pour cette app.
+- Correction : validation élargie à `/^[A-Za-z0-9_-]{20,64}$/`, et message de blocage reformulé (« copie la valeur exacte de Basic Information »).
+
+## 143. Demande de l'utilisateur pour la v35
+- « Sur mon compte Spotify où j'ai le Premium j'ai l'ID, mais j'aimerais que les gens puissent choisir entre se connecter avec Spotify ou YouTube pour ceux qui n'ont pas de compte Spotify Premium, et rendre la connexion à son compte Spotify sans token ni jeton API développeur. Je veux absolument les 2 intégrés et qui marchent parfaitement. »
+
+## 144. Ce qui a été fait en v35
+1. **Validation du Client ID corrigée** : 20 à 64 caractères `[A-Za-z0-9_-]` acceptés → la valeur du tableau de bord passe. La connexion Spotify peut donc enfin s'ouvrir.
+2. **Carte « Spotify ou YouTube ? »** en haut des Réglages, avec deux boutons et un état lisible :
+   - **♫ Spotify** → enregistre le choix et lance la connexion OAuth (compte gratuit accepté pour la connexion ; seule la lecture in-app exige Premium).
+   - **▶ YouTube** → enregistre le choix, fait défiler jusqu'au champ de clé API et lui donne le focus si aucune clé n'existe.
+   - Mode **Automatique** par défaut : Spotify connecté → Spotify, sinon YouTube si une clé existe, sinon iTunes/Deezer.
+3. **Recherche** : `preferYoutube` remplace le test nu `youtubeReady()`, donc le choix de l'utilisateur est respecté (choisir Spotify n'empêche pas de retomber sur YouTube si Spotify n'est pas connecté, mais choisir YouTube force YouTube).
+4. `renderSourceChoice()` rafraîchit les boutons actifs et le texte d'état ; `sourceChoice` est stocké dans `state.db.settings.sourceChoice`.
+
+## 145. Point d'honnêteté rappelé
+- **Aucune connexion Spotify sans jeton** n'existe : le jeton est produit par le login OAuth. Ce que l'on peut supprimer, c'est la **création d'un jeton d'API développeur par chaque utilisateur** — et c'est déjà le cas : seul le propriétaire crée l'app, les amis cliquent et se connectent avec leur e-mail/mot de passe.
+- En **Development mode**, Spotify limite à 5 comptes testeurs : chaque ami doit être ajouté dans *User Management*, sinon `unauthorized_client`.
+
+## 146. Fichiers modifiés en v35
+- `index.html` : validation Client ID élargie, carte de choix Spotify/YouTube, `sourceChoice`/`setSourceChoice`/`renderSourceChoice`/`chooseSpotify`/`chooseYoutube`, `preferYoutube` dans la recherche, câblage, version affichée v35.
+- `sw.js` : cache passé en `rezmusic-v35`.
+- `README.md` : explication du Client ID à 29 caractères et du choix de source.
+- `saveia.txt` : cette section (v13 à v34 intactes, ajout seul).
+
+## 147. Vérifications faites en v35
+- `node --check` sur le script extrait : OK.
+- Éléments uniques : `btn-choose-spotify`, `btn-choose-youtube`, `source-choice-state`.
+- Fonctions `sourceChoice`, `setSourceChoice`, `renderSourceChoice`, `chooseSpotify`, `chooseYoutube` déclarées une seule fois.
+- `preferYoutube` défini dans `searchTracks` et utilisé dans le ternaire YouTube.
+- Archive `rezmusic-v35.zip` (4 fichiers) testée (`testzip()` = None) et servie en HTTP 200.
+- **Non vérifié par l'agent** : parcours OAuth réel (le Client ID 29 caractères n'a pas pu être testé contre Spotify ici) et lecture réelle d'une vidéo YouTube (clé API requise).
+
+## 148. Idées suivantes (non faites)
+1. Mémoriser la dernière source utilisée et l'afficher dans l'en-tête.
+2. Bouton « Tester Spotify » qui vérifie le Client ID sans quitter l'app.
+3. Ajouter les comptes testeurs Spotify (5 max) via une liste partagée dans la session.

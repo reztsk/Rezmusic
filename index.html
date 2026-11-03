@@ -1719,6 +1719,15 @@
     <div class="section-eyebrow">Paramètres</div>
     <div class="section-heading">Réglages</div>
     <div class="section-subtitle">Configuration et comptes connectés.</div>
+    <div class="card">
+      <h2>Spotify ou YouTube ?</h2>
+      <p>Les deux chemins fonctionnent, <strong>gratuitement</strong>. Spotify demande un compte (gratuit ou Premium) : la connexion marche dans les deux cas, seule la <em>lecture audio</em> dans l'app est réservée au Premium par Spotify. YouTube ne demande aucun compte Spotify — juste une clé API Google gratuite.</p>
+      <div class="mode-row">
+        <button class="mode-btn" id="btn-choose-spotify">&#9835; Spotify</button>
+        <button class="mode-btn" id="btn-choose-youtube">&#9654; YouTube</button>
+      </div>
+      <div class="search-hint" id="source-choice-state"></div>
+    </div>
 
     <div class="card">
       <h2>Mode de lecture</h2>
@@ -1796,7 +1805,7 @@
 
     <div class="card">
       <h2>À propos de RezMusic</h2>
-      <p>Version v34 • Recherche et lecture YouTube sans Spotify (clé API gratuite), Partage du son en direct dans l'app, audio seul sans aucune image (WebRTC, l'invité écoute sans Spotify), bouton « Ouvrir ce titre dans mon Spotify » pour écouter à plusieurs sans Premium, connexion Spotify pour tous (e-mail et mot de passe, aucun compte développeur pour tes amis), aide intégrée, Client ID modifiable dans les Réglages, écran de lancement animé, compte Spotify lié à cet appareil (jamais partagé), sessions d'écoute à plusieurs (le code marche même sans compte Spotify), format PC et téléphone détecté automatiquement, paroles synchronisées, extraits 30 s optionnels, pochette carrée, néon rouge, playlists déroulantes, volume, historique des sons écoutés, profils avec code personnel et lecture complète Spotify (Premium requis).</p>
+      <p>Version v35 • Choix Spotify ou YouTube, Client ID du tableau de bord accepté tel quel, Recherche et lecture YouTube sans Spotify (clé API gratuite), Partage du son en direct dans l'app, audio seul sans aucune image (WebRTC, l'invité écoute sans Spotify), bouton « Ouvrir ce titre dans mon Spotify » pour écouter à plusieurs sans Premium, connexion Spotify pour tous (e-mail et mot de passe, aucun compte développeur pour tes amis), aide intégrée, Client ID modifiable dans les Réglages, écran de lancement animé, compte Spotify lié à cet appareil (jamais partagé), sessions d'écoute à plusieurs (le code marche même sans compte Spotify), format PC et téléphone détecté automatiquement, paroles synchronisées, extraits 30 s optionnels, pochette carrée, néon rouge, playlists déroulantes, volume, historique des sons écoutés, profils avec code personnel et lecture complète Spotify (Premium requis).</p>
     </div>
   </div>
 
@@ -2197,10 +2206,11 @@
       setSearchHint('Recherche en cours…');
 
       var preferSpotify = spotifyConnected() && playbackMode() === 'spotify';
+      var preferYoutube = youtubeReady() && (sourceChoice() !== 'spotify' || !spotifyConnected());
 
       return (preferSpotify
         ? sourceSpotify(cleaned).catch(function () { return sourceItunes(cleaned); })
-        : (youtubeReady()
+        : (preferYoutube
             ? sourceYouTube(cleaned).catch(function () { return sourceItunes(cleaned); })
             : sourceItunes(cleaned))
       ).then(function (list) {
@@ -3363,6 +3373,9 @@
     document.getElementById('btn-save-public-client-id').addEventListener('click', savePublicClientId);
 
     document.getElementById('btn-save-youtube-key').addEventListener('click', saveYoutubeApiKey);
+
+    document.getElementById('btn-choose-spotify').addEventListener('click', chooseSpotify);
+    document.getElementById('btn-choose-youtube').addEventListener('click', chooseYoutube);
     document.getElementById('youtube-api-key').addEventListener('keydown', function (event) {
       if (event.key === 'Enter') saveYoutubeApiKey();
     });
@@ -3737,7 +3750,7 @@
     }
 
     function isValidClientId(value) {
-      return /^[0-9a-fA-F]{32}$/.test(String(value || '').trim());
+      return /^[A-Za-z0-9_-]{20,64}$/.test(String(value || '').trim());
     }
 
     function clientIdLine() {
@@ -3911,7 +3924,7 @@
 
     function startSpotifyLogin() {
       if (!isValidClientId(spotifyClientId())) {
-        toast('Client ID Spotify invalide (' + spotifyClientId().length + ' caractères au lieu de 32). Copie-le depuis le tableau de bord.');
+        toast('Client ID Spotify incomplet : copie la valeur exacte affichée dans « Basic Information » du tableau de bord.');
         return;
       }
       if (inIframe()) {
@@ -4882,6 +4895,66 @@
       return isValidYouTubeKey(youtubeApiKey());
     }
 
+    function sourceChoice() {
+      var settings = state.db && state.db.settings ? state.db.settings : null;
+      var value = settings ? settings.sourceChoice : null;
+      return value === 'spotify' || value === 'youtube' ? value : 'auto';
+    }
+
+    function setSourceChoice(value) {
+      if (!state.db.settings) state.db.settings = {};
+      state.db.settings.sourceChoice = value === 'spotify' || value === 'youtube' ? value : 'auto';
+      saveDb();
+      renderSourceChoice();
+      renderPlaybackModeUi();
+    }
+
+    function renderSourceChoice() {
+      var choice = sourceChoice();
+      var spotifyButton = document.getElementById('btn-choose-spotify');
+      var youtubeButton = document.getElementById('btn-choose-youtube');
+      var label = document.getElementById('source-choice-state');
+      if (spotifyButton) {
+        spotifyButton.classList.toggle('active', choice === 'spotify' || (choice === 'auto' && spotifyConnected()));
+      }
+      if (youtubeButton) {
+        youtubeButton.classList.toggle('active', choice === 'youtube' || (choice === 'auto' && !spotifyConnected() && youtubeReady()));
+      }
+      if (!label) return;
+      if (choice === 'spotify') {
+        label.textContent = spotifyConnected()
+          ? 'Source : Spotify' + (spotify.user && spotify.user.display_name ? ' — ' + spotify.user.display_name : '') + '.'
+          : 'Source : Spotify — connecte ton compte avec le bouton ci-dessous (compte gratuit accepté).';
+      } else if (choice === 'youtube') {
+        label.textContent = youtubeReady()
+          ? 'Source : YouTube, clé enregistrée. Cherche un titre : tout se lit sans compte.'
+          : 'Source : YouTube — colle une clé API gratuite dans la carte « Recherche YouTube » plus bas.';
+      } else {
+        label.textContent = 'Automatique : Spotify si tu es connecté, sinon YouTube, sinon extraits iTunes/Deezer.';
+      }
+    }
+
+    function chooseSpotify() {
+      setSourceChoice('spotify');
+      if (spotifyConnected()) {
+        toast('Spotify est déjà connecté sur cet appareil.');
+        return;
+      }
+      startSpotifyLogin();
+    }
+
+    function chooseYoutube() {
+      setSourceChoice('youtube');
+      var input = document.getElementById('youtube-api-key');
+      if (input) {
+        input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        if (!youtubeReady()) setTimeout(function () { input.focus(); }, 350);
+      }
+      toast(youtubeReady()
+        ? 'YouTube est prêt : cherche un titre.'
+        : 'Colle ta clé API YouTube (gratuite) dans la carte ci-dessous, puis enregistre.');
+    }
+
     function renderYoutubeUi() {
       var input = document.getElementById('youtube-api-key');
       if (input && document.activeElement !== input) input.value = youtubeApiKey();
@@ -5722,6 +5795,7 @@
     renderPublicClientId();
     renderRedirectUriHelp();
     renderYoutubeUi();
+    renderSourceChoice();
     renderPlaylists();
     restoreSpotifySession();
     handleSpotifyRedirect();
