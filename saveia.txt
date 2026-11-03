@@ -1081,3 +1081,92 @@ Auteur de la version : Buffy (agent de code)
 1. Mémoriser la dernière source utilisée et l'afficher dans l'en-tête.
 2. Bouton « Tester Spotify » qui vérifie le Client ID sans quitter l'app.
 3. Ajouter les comptes testeurs Spotify (5 max) via une liste partagée dans la session.
+
+
+---
+
+# RezMusic - Journal de Projet & Idées (v36)
+Date : 3 Novembre 2026
+Auteur de la version : Buffy (agent de code)
+
+## 149. Question de l'utilisateur pour la v36
+- « Comment on fait pour avoir la page officielle de Spotify et de YouTube pour que quand il se connecte ça envoie un jeton tout seul et que ça connecte leur compte automatiquement sur mon application ? C'est ça que je veux. »
+
+## 150. Réponse technique (et ce qui existait déjà)
+- C'est **exactement le flux OAuth déjà codé** : le bouton construit `https://accounts.spotify.com/authorize?client_id=…&redirect_uri=…&code_challenge=…`, l'utilisateur tape son e-mail et son mot de passe **chez Spotify**, Spotify revient sur le site avec `?code=…`, et `completeSpotifyLogin()` échange ce code contre un **jeton** (`POST https://accounts.spotify.com/api/token`) qu'on stocke, puis `refreshSpotifyUser()` affiche le compte. Aucune action de l'utilisateur, aucune clé à créer de son côté.
+- Le vrai défaut : sur ordinateur, ce parcours passait par une **popup** (`window.open`), souvent bloquée, et le retour dépendait du vendeur de navigateur pour la copie du `sessionStorage` (code PKCE). D'où l'impression que « ça ne connecte pas ».
+- Rappel : YouTube n'a **pas** de page de connexion à passer pour chercher — la recherche marche avec la clé API (v34) et la lecture se fait dans le lecteur YouTube officiel. Une connexion Google ne servirait qu'aux playlists personnelles YouTube.
+
+## 151. Ce qui a été fait en v36
+1. **Connexion Spotify en plein écran, toujours** : suppression de la popup (`window.open`) et du test `data-layout`. On redirige l'onglet courant vers la page officielle Spotify, qui revient sur l'app avec `?code=` ; l'échange se fait dans le même onglet, où le `sessionStorage` (code PKCE) est garanti. Message « Redirection vers la page officielle de Spotify… » avant le départ.
+2. **Retour de Spotify explicite** : `handleSpotifyRedirect()` affiche « Retour de Spotify : création du jeton… », puis appelle `completeSpotifyLogin()`. En cas de `?error=`, `checkSpotifyAuthError()` traduit le code (`access_denied`, `invalid_client`, `unauthorized_client`, `invalid_request`).
+3. **Après succès** : `sourceChoice` passe automatiquement à `spotify`, et le message devient « Spotify connecté : <nom du compte> ».
+4. **Message du champ Client ID corrigé** : il parlait encore de « 32 caractères » alors que la validation accepte désormais 20 à 64 caractères (ta clé fait 29).
+
+## 152. Fichiers modifiés en v36
+- `index.html` : redirection plein écran, retour explicite, source automatique après connexion, messages, version affichée v36.
+- `sw.js` : cache passé en `rezmusic-v36`.
+- `README.md` : parcours de connexion détaillé, étape par étape.
+- `saveia.txt` : cette section (v13 à v35 intactes, ajout seul).
+
+## 153. Vérifications faites en v36
+- `node --check` sur le script extrait : OK.
+- Plus aucun appel à `window.open(authUrl…)` : vérifié par recherche (0 occurrence).
+- `location.href = authUrl` présent une seule fois ; message de redirection présent.
+- Archive `rezmusic-v36.zip` (4 fichiers) testée (`testzip()` = None) et servie en HTTP 200.
+- **Non vérifié par l'agent** : le parcours complet jusqu'au jeton (il faut ton Client ID réel, ton compte et ta Redirect URI). C'est le seul test qui tranche.
+
+## 154. Idées suivantes (non faites)
+1. Bouton « Tester le jeton » qui appelle `/me` juste après la connexion et affiche le nom du compte.
+2. Mémoriser le dernier écran avant la redirection Spotify (retour au même onglet).
+3. Connexion Google optionnelle pour les playlists YouTube personnelles.
+
+
+---
+
+# RezMusic - Journal de Projet & Idées (v37)
+Date : 3 Novembre 2026
+Auteur de la version : Buffy (agent de code)
+
+## 155. Retours de l'utilisateur pour la v37 (test réel avec son ami)
+1. Son ami a pu se connecter à Spotify, puis après validation du code par mail, Spotify affiche **`client_id: Invalid`**.
+2. La session partagée ne diffuse pas l'audio : côté invité « en attente de synchronisation », il n'entend rien.
+3. La notation des sons sur 5 étoiles n'apparaît plus.
+4. L'ajout d'ami ne fonctionne pas : le code est accepté mais le profil reste introuvable des deux côtés.
+
+## 156. Analyse
+- **`client_id: Invalid`** vient de Spotify : la valeur envoyée n'est pas reconnue comme un Client ID. Aucun code ne peut contourner ça ; il faut la valeur exacte, copiée avec le bouton du tableau de bord. Ajout d'un **testeur** qui interroge `accounts.spotify.com/api/token` : `invalid_client` = refusé, `invalid_grant` = accepté.
+- **Audio** : `startAudioShare()` envoyait **une seule offre** RTC au démarrage. Un invité qui rejoint ensuite ne recevait jamais d'offre → attente infinie. Correction : offre renvoyée quand un participant arrive, et à la demande (`rtc-request`).
+- **Étoiles** : elles n'existaient que dans la bibliothèque, jamais dans les résultats de recherche. Réintroduites et cliquables.
+- **Amis** : le système était **local** (`profileByCode` ne lit que ce navigateur). Un code venant d'un autre appareil restait « en attente de synchronisation ». Ajout d'un vrai échange de profils via le broker MQTT.
+
+## 157. Ce qui a été fait en v37
+1. **Testeur de Client ID** (`#btn-test-client-id`, `#client-id-test`) : affiche la valeur envoyée (début/fin + longueur) et le verdict de Spotify.
+2. **Audio de session fiable** : `sendAudioOffer(targetId)`, ré-offre sur présence d'un invité (throttle 6 s, seulement si aucun auditeur), `rtc-request` envoyé par l'invité, filtre `to` sur les offres.
+3. **Notation 5 étoiles dans la recherche** : `ratingValue(id)`, étoiles dans chaque ligne de résultat, écouteur en phase de capture sur `#search-results` (le clic ne lance pas la lecture), CSS `.result-stars`.
+4. **Amis entre appareils** : second client MQTT (`rezpf_…`) abonné à `rezmusic/profile/<MON_CODE>`, publication du profil à la connexion et sur demande (`who`), réponse sur le topic du demandeur, profils stockés dans `state.db.friendProfiles`, `renderFriends` utilise `profileByCode` **ou** `remoteProfile`.
+5. `addFriend()` demande immédiatement le profil distant.
+
+## 158. Fichiers modifiés en v37
+- `index.html` : testeur Client ID, audio RTC ré-offert, étoiles dans la recherche, module amis MQTT, version affichée v37.
+- `sw.js` : cache passé en `rezmusic-v37`.
+- `README.md` : dépannage des quatre problèmes.
+- `saveia.txt` : cette section (v13 à v36 intactes, ajout seul).
+
+## 159. Vérifications faites en v37
+- `node --check` sur le script extrait : OK.
+- Éléments uniques : `btn-test-client-id`, `client-id-test`.
+- Nouvelles fonctions déclarées une seule fois (testeur, offre RTC, notation, amis MQTT).
+- Archive `rezmusic-v37.zip` (4 fichiers) testée (`testzip()` = None) et servie en HTTP 200.
+- **Non vérifié par l'agent** : connexion Spotify réelle (Client ID valide côté tableau de bord), audio WebRTC entre deux appareils, échange d'amis à deux navigateurs.
+
+## 160. Reste à faire côté utilisateur
+- Copier le Client ID avec le **bouton copier** de Spotify (Basic Information), le coller dans Réglages, puis **Tester le Client ID** : doit afficher « ACCEPTÉ ».
+- Ajouter le compte de l'ami dans **User Management** (5 comptes max en mode développement).
+- Audio : l'hôte partage en cochant « Partager l'audio » ; l'invité ouvre la session après, ou touche « Écouter le direct » (l'offre est renvoyée automatiquement).
+- Amis : les deux navigateurs doivent être ouverts en même temps pour l'échange.
+
+## 161. Idées suivantes (non faites)
+1. Synchroniser favoris et notes entre amis.
+2. Péremption affichée des profils reçus.
+3. Serveur TURN pour l'audio sur réseaux stricts.

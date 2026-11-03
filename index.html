@@ -1302,6 +1302,20 @@
       display: block;
     }
 
+    .result-stars {
+      letter-spacing: 1px;
+      font-size: 14px;
+      margin: 4px 0 6px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .result-stars span {
+      color: rgba(255, 255, 255, 0.3);
+    }
+    .result-stars span.on {
+      color: #ffc107;
+    }
+
     /* Aide connexion Spotify */
     .help-box {
       border: 1px solid var(--card-border);
@@ -1721,7 +1735,7 @@
     <div class="section-subtitle">Configuration et comptes connectés.</div>
     <div class="card">
       <h2>Spotify ou YouTube ?</h2>
-      <p>Les deux chemins fonctionnent, <strong>gratuitement</strong>. Spotify demande un compte (gratuit ou Premium) : la connexion marche dans les deux cas, seule la <em>lecture audio</em> dans l'app est réservée au Premium par Spotify. YouTube ne demande aucun compte Spotify — juste une clé API Google gratuite.</p>
+      <p>Les deux chemins fonctionnent, <strong>gratuitement</strong>. Spotify ouvre <strong>sa page officielle</strong> : ton ami tape son e-mail et son mot de passe chez Spotify, jamais ici, et le jeton est créé automatiquement au retour. Spotify demande un compte (gratuit ou Premium) : la connexion marche dans les deux cas, seule la <em>lecture audio</em> dans l'app est réservée au Premium par Spotify. YouTube ne demande aucun compte Spotify — juste une clé API Google gratuite.</p>
       <div class="mode-row">
         <button class="mode-btn" id="btn-choose-spotify">&#9835; Spotify</button>
         <button class="mode-btn" id="btn-choose-youtube">&#9654; YouTube</button>
@@ -1747,6 +1761,8 @@
       <p style="margin: 0 0 8px;">Ce n'est <strong>pas</strong> un jeton personnel et tu n'as rien à créer : tu te connectes avec ton compte Spotify, le jeton est généré automatiquement. Ce champ sert seulement si le site affiche « Client ID invalide ». Colle ici le Client ID de l'application (32 caractères, depuis <em>Spotify Developer Dashboard → ton app → Settings</em>).</p>
       <input class="search-input" id="public-client-id" maxlength="40" placeholder="Client ID Spotify (32 caractères)" autocomplete="off" spellcheck="false">
       <button class="mode-btn" id="btn-save-public-client-id" style="width: 100%; margin-top: 8px;">Enregistrer le Client ID</button>
+      <button class="mode-btn" id="btn-test-client-id" style="width: 100%; margin-top: 8px;">Tester le Client ID</button>
+      <div class="search-hint" id="client-id-test"></div>
 
       <p style="margin-top: 14px;">Tes amis n'ont <strong>aucun compte développeur</strong> à créer : en touchant « Se connecter avec Spotify », Spotify leur demande directement leur <strong>e-mail et mot de passe</strong>, exactement comme dans l'application Spotify normale. Seul le propriétaire du site crée l'application une fois (le Client ID ci-dessus).</p>
 
@@ -1805,7 +1821,7 @@
 
     <div class="card">
       <h2>À propos de RezMusic</h2>
-      <p>Version v35 • Choix Spotify ou YouTube, Client ID du tableau de bord accepté tel quel, Recherche et lecture YouTube sans Spotify (clé API gratuite), Partage du son en direct dans l'app, audio seul sans aucune image (WebRTC, l'invité écoute sans Spotify), bouton « Ouvrir ce titre dans mon Spotify » pour écouter à plusieurs sans Premium, connexion Spotify pour tous (e-mail et mot de passe, aucun compte développeur pour tes amis), aide intégrée, Client ID modifiable dans les Réglages, écran de lancement animé, compte Spotify lié à cet appareil (jamais partagé), sessions d'écoute à plusieurs (le code marche même sans compte Spotify), format PC et téléphone détecté automatiquement, paroles synchronisées, extraits 30 s optionnels, pochette carrée, néon rouge, playlists déroulantes, volume, historique des sons écoutés, profils avec code personnel et lecture complète Spotify (Premium requis).</p>
+      <p>Version v37 • Amis synchronisés entre appareils, notation 5 étoiles dans la recherche, audio de session ré-offert, test du Client ID, Connexion Spotify par page officielle en plein écran (jeton créé automatiquement), Choix Spotify ou YouTube, Client ID du tableau de bord accepté tel quel, Recherche et lecture YouTube sans Spotify (clé API gratuite), Partage du son en direct dans l'app, audio seul sans aucune image (WebRTC, l'invité écoute sans Spotify), bouton « Ouvrir ce titre dans mon Spotify » pour écouter à plusieurs sans Premium, connexion Spotify pour tous (e-mail et mot de passe, aucun compte développeur pour tes amis), aide intégrée, Client ID modifiable dans les Réglages, écran de lancement animé, compte Spotify lié à cet appareil (jamais partagé), sessions d'écoute à plusieurs (le code marche même sans compte Spotify), format PC et téléphone détecté automatiquement, paroles synchronisées, extraits 30 s optionnels, pochette carrée, néon rouge, playlists déroulantes, volume, historique des sons écoutés, profils avec code personnel et lecture complète Spotify (Premium requis).</p>
     </div>
   </div>
 
@@ -2258,6 +2274,7 @@
             '<strong>' + escapeHtml(track.title) + '</strong>' +
             '<span>' + escapeHtml(track.artist) + (track.preview || track.source === 'youtube' ? '' : ' • extrait indisponible') + '</span>' +
           '</div>' +
+          '<div class="result-stars stars" data-rate-index="' + index + '">' + starsMarkup(ratingValue(track.id)) + '</div>' +
           '<div class="result-actions">' +
             '<button class="icon-btn fav' + (fav ? ' active' : '') + '" data-fav="' + escapeHtml(track.id) + '" title="Favori">♥</button>' +
             '<button class="icon-btn add" data-add="' + index + '" title="Ajouter à une playlist">＋</button>' +
@@ -2269,6 +2286,22 @@
         '</div>';
       }).join('');
     }
+
+    document.getElementById('search-results').addEventListener('click', function (event) {
+      var stars = event.target.closest('.result-stars');
+      if (!stars) return;
+      event.stopPropagation();
+      event.preventDefault();
+      var index = Number(stars.getAttribute('data-rate-index'));
+      var track = state.queue[index];
+      if (!track) return;
+      var rect = stars.getBoundingClientRect();
+      var ratio = rect.width ? (event.clientX - rect.left) / rect.width : 0.5;
+      var value = Math.min(5, Math.max(1, Math.ceil(ratio * 5)));
+      var current = ratingValue(track.id);
+      setRating(track, value === current ? 0 : value);
+      renderResults(state.queue);
+    }, true);
 
     /* ---------- favoris & notes (par profil) ---------- */
     function isFavorite(id) {
@@ -2323,6 +2356,13 @@
         html += '<span class="' + (i <= value ? 'on' : '') + '">' + (i <= value ? '★' : '☆') + '</span>';
       }
       element.innerHTML = html;
+    }
+
+    function ratingValue(id) {
+      var profile = activeProfile();
+      if (!profile || !profile.ratings) return 0;
+      var entry = profile.ratings[id];
+      return entry ? Number(entry.value) || 0 : 0;
     }
 
     function starsMarkup(value) {
@@ -2524,7 +2564,7 @@
       }
 
       container.innerHTML = profile.friends.map(function (code) {
-        var known = profileByCode(code);
+        var known = profileByCode(code) || remoteProfile(code);
         var entry = liveEntry(code);
         var name = known ? known.name : (entry ? entry.name : 'Profil ' + code);
         var emoji = known ? known.emoji : (entry ? entry.emoji : '👤');
@@ -3081,12 +3121,15 @@
       }
       me.friends.push(code);
       saveDb();
+      requestFriendProfile(code);
       renderFriends();
       renderLiveFeed();
       renderLiveNow();
       document.getElementById('friend-code').value = '';
       var known = profileByCode(code);
-      toast(known ? 'Ami ajouté : ' + known.name : 'Code ' + code + ' ajouté. Les infos arriveront avec la synchronisation.');
+      toast(known
+        ? 'Ami ajouté : ' + known.name
+        : 'Ami ajouté : recherche de son profil en cours…');
     }
 
     /* ---------- session juke-box ---------- */
@@ -3371,6 +3414,7 @@
     });
 
     document.getElementById('btn-save-public-client-id').addEventListener('click', savePublicClientId);
+    document.getElementById('btn-test-client-id').addEventListener('click', testSpotifyClientId);
 
     document.getElementById('btn-save-youtube-key').addEventListener('click', saveYoutubeApiKey);
 
@@ -3411,7 +3455,13 @@
         restoreSpotifySession();
         renderPlaybackModeUi();
         refreshSpotifyUser();
-        toast('Spotify connecté.');
+        if (!state.db.settings) state.db.settings = {};
+        state.db.settings.sourceChoice = 'spotify';
+        saveDb();
+        renderSourceChoice();
+        renderPublicClientId();
+        toast('Spotify connecté : ' + (spotify.user && spotify.user.display_name ? spotify.user.display_name : 'ton compte') + '.');
+
       }
     });
 
@@ -3643,6 +3693,47 @@
       if (element) element.textContent = redirectUri();
     }
 
+    function clientIdPreview() {
+      var id = String(spotifyClientId() || "");
+      if (id.length <= 8) return id + " (" + id.length + " caracteres)";
+      return id.slice(0, 4) + "..." + id.slice(-4) + " (" + id.length + " caracteres)";
+    }
+
+    function testSpotifyClientId() {
+      var out = document.getElementById("client-id-test");
+      var id = String(spotifyClientId() || "").trim();
+      if (out) out.textContent = "Test en cours... valeur envoyee : " + clientIdPreview();
+      var body = new URLSearchParams({
+        grant_type: "authorization_code",
+        code: "rezmusic-test",
+        redirect_uri: redirectUri(),
+        client_id: id
+      });
+      fetch("https://accounts.spotify.com/api/token", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: body.toString()
+      }).then(function (res) {
+        return res.json().catch(function () { return {}; }).then(function (data) {
+          var error = data && data.error ? String(data.error) : "";
+          var text;
+          if (error === "invalid_client") {
+            text = "REFUSE : Spotify ne reconnait pas ce Client ID (" + id.length + " caracteres). Copie-le avec le bouton copier de Basic Information au lieu de le retaper.";
+          } else if (error === "invalid_grant" || error === "invalid_request") {
+            text = "ACCEPTE : Spotify reconnait ce Client ID (" + id.length + " caracteres). Le code de test est refuse, c est normal.";
+          } else if (res.ok) {
+            text = "ACCEPTE : Spotify a repondu correctement.";
+          } else {
+            text = "Reponse de Spotify : " + (error || ("HTTP " + res.status));
+          }
+          if (out) out.textContent = text;
+          toast(error === "invalid_client" ? "Client ID refuse par Spotify." : "Test termine.");
+        });
+      }).catch(function (error) {
+        if (out) out.textContent = "Test impossible : " + error.message;
+      });
+    }
+
     function renderPublicClientId() {
       var input = document.getElementById('public-client-id');
       if (input && document.activeElement !== input) input.value = spotifyClientId();
@@ -3653,7 +3744,7 @@
       if (!input) return;
       var value = String(input.value || '').replace(/\s+/g, '').toLowerCase();
       if (!isValidClientId(value)) {
-        toast('Un Client ID Spotify fait exactement 32 caractères (' + value.length + ' ici).');
+        toast('Client ID trop court (' + value.length + ' caractères) : copie la valeur exacte affichée dans « Basic Information » du tableau de bord Spotify.');
         return;
       }
       if (!state.db.settings) state.db.settings = {};
@@ -3948,15 +4039,8 @@
           code_challenge: base64Url(digest)
         });
         var authUrl = 'https://accounts.spotify.com/authorize?' + params.toString();
-        if (document.documentElement.getAttribute('data-layout') === 'phone') {
-          location.href = authUrl;
-          return;
-        }
-        var popup = window.open(authUrl, 'rezmusic-spotify', 'width=520,height=760');
-        if (!popup) {
-          toast('Popup bloquée : on ouvre la connexion dans cet onglet.');
-          location.href = authUrl;
-        }
+        toast('Redirection vers la page officielle de Spotify…');
+        location.href = authUrl;
       }).catch(function () {
         toast('Connexion Spotify impossible (chiffrement indisponible).');
       });
@@ -4315,8 +4399,14 @@
     function handleSpotifyRedirect() {
       var params = new URLSearchParams(location.search);
       var code = params.get('code');
-      if (code) completeSpotifyLogin(code);
-      else if (params.get('error')) toast('Connexion Spotify annulée.');
+      if (code) {
+        toast('Retour de Spotify : création du jeton…');
+        completeSpotifyLogin(code);
+        return;
+      }
+      if (params.get('error')) {
+        checkSpotifyAuthError();
+      }
     }
 
     /* ---------- playlists ---------- */
@@ -5117,6 +5207,120 @@
       });
     }
 
+    /* ---------- amis synchronises (MQTT) ---------- */
+    var friendClient = null;
+    var friendConnecting = null;
+
+    function friendTopic(code) {
+      return 'rezmusic/profile/' + code;
+    }
+
+    function friendProfiles() {
+      if (!state.db.friendProfiles) state.db.friendProfiles = {};
+      return state.db.friendProfiles;
+    }
+
+    function remoteProfile(code) {
+      var entry = friendProfiles()[code];
+      if (!entry) return null;
+      if (Date.now() - (entry.at || 0) > 86400000) return null;
+      return entry;
+    }
+
+    function ensureFriendClient() {
+      if (friendClient) return Promise.resolve(friendClient);
+      if (friendConnecting) return friendConnecting;
+      friendConnecting = loadMqtt().then(function (mqtt) {
+        var client = mqtt.connect(SESSION_BROKER, {
+          clientId: 'rezpf_' + Math.random().toString(16).slice(2, 10),
+          clean: true,
+          connectTimeout: 8000,
+          reconnectPeriod: 5000
+        });
+        client.on('connect', function () {
+          var me = activeProfile();
+          if (me) client.subscribe(friendTopic(me.code));
+          publishMyProfile(client);
+        });
+        client.on('message', function (topic, payload) {
+          handleFriendMessage(payload);
+        });
+        friendClient = client;
+        return client;
+      }).catch(function () { return null; });
+      return friendConnecting;
+    }
+
+    function publishMyProfile(client) {
+      var me = activeProfile();
+      if (!me || !client || !client.connected) return;
+      client.publish(friendTopic(me.code), JSON.stringify({
+        type: 'profile',
+        code: me.code,
+        name: me.name,
+        emoji: me.emoji,
+        at: Date.now()
+      }));
+    }
+
+    function announceProfile() {
+      ensureFriendClient().then(function (client) {
+        publishMyProfile(client);
+      });
+    }
+
+    function requestFriendProfile(code) {
+      ensureFriendClient().then(function (client) {
+        if (!client) {
+          toast('Synchronisation des amis indisponible : réseau bloqué.');
+          return;
+        }
+        var me = activeProfile();
+        client.publish(friendTopic(code), JSON.stringify({
+          type: 'who',
+          from: me ? me.code : '',
+          at: Date.now()
+        }));
+        publishMyProfile(client);
+      });
+    }
+
+    function handleFriendMessage(payload) {
+      var data;
+      try { data = JSON.parse(String(payload)); } catch (error) { return; }
+      if (!data || !data.type) return;
+
+      if (data.type === 'who') {
+        var me = activeProfile();
+        if (me && data.from && data.from !== me.code) {
+          ensureFriendClient().then(function (client) {
+            if (!client || !client.connected) return;
+            client.publish(friendTopic(data.from), JSON.stringify({
+              type: 'profile',
+              code: me.code,
+              name: me.name,
+              emoji: me.emoji,
+              at: Date.now()
+            }));
+          });
+        }
+        return;
+      }
+
+      if (data.type === 'profile' && data.code) {
+        friendProfiles()[data.code] = {
+          name: data.name || ('Profil ' + data.code),
+          emoji: data.emoji || '👤',
+          at: Date.now()
+        };
+        saveDb();
+        renderFriends();
+        renderLiveFeed();
+        renderLiveNow();
+        toast('Profil reçu : ' + friendProfiles()[data.code].name);
+      }
+    }
+
     /* ---------- session partagee (MQTT public, sans compte) ---------- */
     var SESSION_BROKER = 'wss://broker.emqx.io:8084/mqtt';
     var session = {
@@ -5296,6 +5500,10 @@
 
       if (data.type === 'presence') {
         session.people[data.id] = { name: data.name, emoji: data.emoji, host: !!data.host, at: Date.now() };
+        if (session.isHost && audioShare.stream && audioShare.listeners === 0 &&
+            Date.now() - (audioShare.lastOfferAt || 0) > 6000) {
+          sendAudioOffer(data.id);
+        }
         renderSessionUi();
         return;
       }
@@ -5504,6 +5712,21 @@
       }
     }
 
+    function sendAudioOffer(targetId) {
+      if (!session.isHost || !audioShare.pc || !audioShare.stream) return;
+      audioShare.pc.createOffer({ offerToReceiveAudio: false }).then(function (offer) {
+        return audioShare.pc.setLocalDescription(offer);
+      }).then(function () {
+        audioShare.lastOfferAt = Date.now();
+        publishSessionMessage({
+          type: "rtc-offer",
+          from: session.clientId,
+          to: targetId || "",
+          sdp: audioShare.pc.localDescription
+        });
+      }).catch(function () { /* ignore */ });
+    }
+
     function startAudioShare() {
       if (!session.code || !session.isHost) return;
       if (!shareSupported()) {
@@ -5539,6 +5762,7 @@
         return pc.createOffer({ offerToReceiveAudio: false }).then(function (offer) {
           return pc.setLocalDescription(offer);
         }).then(function () {
+          audioShare.lastOfferAt = Date.now();
           publishSessionMessage({ type: 'rtc-offer', from: session.clientId, sdp: pc.localDescription });
           renderShareUi();
           toast('Partage démarré : ton ami touche « Écouter le direct ».');
@@ -5564,6 +5788,7 @@
 
     function playRemoteAudio() {
       if (!sessionRemoteAudio || !sessionRemoteAudio.srcObject) {
+        publishSessionMessage({ type: 'rtc-request', from: session.clientId });
         toast('En attente du partage de l\'hôte…');
         return;
       }
@@ -5577,7 +5802,13 @@
     }
 
     function handleRtcMessage(data) {
+      if (data.type === 'rtc-request' && session.isHost) {
+        sendAudioOffer(data.from);
+        return true;
+      }
+
       if (data.type === 'rtc-offer' && !session.isHost) {
+        if (data.to && data.to !== session.clientId) return true;
         if (listenPeer) {
           try { listenPeer.close(); } catch (error) { /* ignore */ }
         }
@@ -5796,6 +6027,7 @@
     renderRedirectUriHelp();
     renderYoutubeUi();
     renderSourceChoice();
+    setTimeout(announceProfile, 1500);
     renderPlaylists();
     restoreSpotifySession();
     handleSpotifyRedirect();
