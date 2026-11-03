@@ -1283,6 +1283,33 @@
     .nav-icon {
       font-size: 18px;
     }
+    /* Aide connexion Spotify */
+    .help-box {
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 12px;
+      background: #202024;
+    }
+    .help-box summary {
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+    .help-box ol {
+      margin: 10px 0 0;
+      padding-left: 18px;
+      font-size: 12px;
+      line-height: 1.6;
+      color: var(--text-secondary);
+    }
+    .help-box code {
+      display: inline-block;
+      word-break: break-all;
+      color: #ff8a80;
+      font-size: 11px;
+    }
+
     /* ---------- écran de lancement ---------- */
     .splash {
       position: fixed;
@@ -1550,7 +1577,10 @@
 
     <div class="card">
       <h2>Session d'écoute</h2>
-      <p>Créez une session et envoyez le code à un ami : il verra en direct ce que vous écoutez, sur son propre appareil. Chacun écoute avec son compte Spotify — un invité sans Spotify voit les titres mais n'entend rien.</p>
+      <p>Créez une session et envoyez le code à un ami : il verra en direct ce que vous écoutez, sur son propre appareil.</p>
+      <p><strong>Deux façons d'écouter ensemble :</strong></p>
+      <p>1. <strong>Sans Premium, chacun sur son Spotify</strong> : l'invité touche « Ouvrir ce titre dans mon Spotify » et lance le même morceau dans son application, gratuitement.</p>
+      <p>2. <strong>Le son direct depuis cette app</strong> : l'hôte (sur ordinateur, Chrome ou Edge) touche « Partager le son de mon PC », choisit l'onglet ou l'écran en cochant « Partager l'audio », et l'invité touche « Écouter le direct ». Le son arrive alors dans RezMusic, sans Spotify côté invité. Limites : iOS ne permet pas de capturer le son d'une autre application, le partage s'arrête si l'hôte ferme l'onglet, et certains réseaux très stricts (entreprises) bloquent la connexion directe.</p>
       <div id="session-status" class="search-hint">Session inactive.</div>
       <button class="btn" id="btn-create-session">Créer une session</button>
       <div class="session-code" id="session-code" style="display: none;">······</div>
@@ -1568,6 +1598,18 @@
     <div class="card" id="session-panel" style="display: none;">
       <h2>En direct</h2>
       <div id="session-live"></div>
+
+      <div id="session-share" style="display: none; margin-top: 12px;">
+        <button class="mode-btn" id="btn-share-audio" style="width: 100%;">&#128266; Partager le son de mon PC</button>
+        <button class="mode-btn" id="btn-stop-share" style="width: 100%; display: none;">Arrêter le partage</button>
+        <div class="search-hint" id="share-status"></div>
+      </div>
+
+      <div id="session-listen" style="display: none; margin-top: 12px;">
+        <button class="mode-btn" id="btn-listen" style="width: 100%;">&#128266; Écouter le direct</button>
+        <audio id="session-remote-audio" controls style="width: 100%; margin-top: 8px; display: none;"></audio>
+        <div class="search-hint">Le son arrive de l'appareil de l'hôte. Si rien ne s'entend, touche le bouton ou le ▶ du lecteur : les navigateurs bloquent le son automatique.</div>
+      </div>
       <div class="section-eyebrow" style="margin: 14px 0 8px;">Participants</div>
       <div id="session-people"></div>
     </div>
@@ -1669,6 +1711,24 @@
       <p style="margin-top: 14px;">Chaque personne connecte <strong>son propre compte</strong> : le jeton Spotify est gardé uniquement dans ce navigateur et n'est jamais partagé, ni avec la session d'écoute, ni avec les autres visiteurs. Personne ne peut ouvrir ton compte depuis RezMusic, et tu ne peux pas tomber sur le compte de quelqu'un d'autre.</p>
       <button class="mode-btn" id="btn-remember-spotify" style="width: 100%; margin-top: 10px;">Mémoriser ma connexion : activé</button>
       <div class="search-hint">Appareil : <span id="spotify-device">----</span> &middot; connexion liée à ce navigateur</div>
+      <div class="notice" id="spotify-client-warning" style="display: none; margin-top: 12px;"></div>
+      <div class="section-eyebrow" style="margin: 16px 0 8px;">Client ID de l'application</div>
+      <p style="margin: 0 0 8px;">Ce n'est <strong>pas</strong> un jeton personnel et tu n'as rien à créer : tu te connectes avec ton compte Spotify, le jeton est généré automatiquement. Ce champ sert seulement si le site affiche « Client ID invalide ». Colle ici le Client ID de l'application (32 caractères, depuis <em>Spotify Developer Dashboard → ton app → Settings</em>).</p>
+      <input class="search-input" id="public-client-id" maxlength="40" placeholder="Client ID Spotify (32 caractères)" autocomplete="off" spellcheck="false">
+      <button class="mode-btn" id="btn-save-public-client-id" style="width: 100%; margin-top: 8px;">Enregistrer le Client ID</button>
+
+      <p style="margin-top: 14px;">Tes amis n'ont <strong>aucun compte développeur</strong> à créer : en touchant « Se connecter avec Spotify », Spotify leur demande directement leur <strong>e-mail et mot de passe</strong>, exactement comme dans l'application Spotify normale. Seul le propriétaire du site crée l'application une fois (le Client ID ci-dessus).</p>
+
+      <details class="help-box" id="spotify-help" style="margin-top: 12px;">
+        <summary>Aide : faire marcher la connexion Spotify pour tout le monde</summary>
+        <ol>
+          <li>Le propriétaire du site ouvre <em>Spotify Developer Dashboard → son application → Settings</em>, copie le <strong>Client ID</strong> (32 caractères) et le colle dans le champ ci-dessus.</li>
+          <li>Dans <em>Redirect URIs</em>, ajouter <strong>exactement</strong> cette adresse : <code id="redirect-uri-help">…</code></li>
+          <li>Dans <em>User Management</em>, ajouter le compte Spotify de chaque ami (5 comptes maximum en mode développement).</li>
+          <li>Pour écouter les morceaux en entier : compte <strong>Premium</strong> (règle de Spotify, pas un réglage de RezMusic).</li>
+        </ol>
+        <button class="btn secondary" id="btn-copy-redirect" style="margin-top: 8px;">Copier l'adresse de redirection</button>
+      </details>
     </div>
 
     <div class="card">
@@ -1697,7 +1757,7 @@
 
     <div class="card">
       <h2>À propos de RezMusic</h2>
-      <p>Version v27 • Écran de lancement animé, compte Spotify lié à cet appareil (jamais partagé), sessions d'écoute à plusieurs (le code marche même sans compte Spotify), format PC et téléphone détecté automatiquement, paroles synchronisées, extraits 30 s optionnels, pochette carrée, néon rouge, playlists déroulantes, volume, historique des sons écoutés, profils avec code personnel et lecture complète Spotify (Premium requis).</p>
+      <p>Version v32 • Partage du son en direct dans l'app (WebRTC, l'invité écoute sans Spotify), bouton « Ouvrir ce titre dans mon Spotify » pour écouter à plusieurs sans Premium, connexion Spotify pour tous (e-mail et mot de passe, aucun compte développeur pour tes amis), aide intégrée, Client ID modifiable dans les Réglages, écran de lancement animé, compte Spotify lié à cet appareil (jamais partagé), sessions d'écoute à plusieurs (le code marche même sans compte Spotify), format PC et téléphone détecté automatiquement, paroles synchronisées, extraits 30 s optionnels, pochette carrée, néon rouge, playlists déroulantes, volume, historique des sons écoutés, profils avec code personnel et lecture complète Spotify (Premium requis).</p>
     </div>
   </div>
 
@@ -3241,6 +3301,22 @@
       setRememberSpotify(!rememberSpotify());
     });
 
+    document.getElementById('btn-save-public-client-id').addEventListener('click', savePublicClientId);
+
+    document.getElementById('btn-copy-redirect').addEventListener('click', function () {
+      var address = redirectUri();
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(address).then(function () {
+          toast('Adresse copiée : ' + address);
+        }).catch(function () { toast('Adresse : ' + address); });
+      } else {
+        toast('Adresse : ' + address);
+      }
+    });
+    document.getElementById('public-client-id').addEventListener('keydown', function (event) {
+      if (event.key === 'Enter') savePublicClientId();
+    });
+
     document.getElementById('btn-preview').addEventListener('click', function () {
       if (state.index >= 0) playIndex(state.index, true);
       else toast('Lancez d\'abord un morceau.');
@@ -3270,9 +3346,11 @@
         return;
       }
       if (!state.db.settings) state.db.settings = {};
-      state.db.settings.spotifyClientId = value;
+      state.db.settings.spotifyClientId = value.toLowerCase();
       saveDb();
       initSpotifyDiag();
+      renderClientIdWarning();
+      renderPublicClientId();
       toast('Client ID enregistré.');
     });
 
@@ -3403,6 +3481,10 @@
     });
     document.getElementById('btn-leave-session').addEventListener('click', leaveSession);
 
+    document.getElementById('btn-share-audio').addEventListener('click', startAudioShare);
+    document.getElementById('btn-stop-share').addEventListener('click', stopAudioShare);
+    document.getElementById('btn-listen').addEventListener('click', playRemoteAudio);
+
     document.querySelectorAll('[data-layout-mode]').forEach(function (button) {
       button.addEventListener('click', function () {
         setLayoutMode(button.getAttribute('data-layout-mode'));
@@ -3478,6 +3560,113 @@
 
     /* ---------- mode de lecture, Spotify et playlists ---------- */
     var SPOTIFY_CLIENT_ID_DEFAULT = '3a9cd2cd1d445e693501c9e29a7b3';
+
+    function renderRedirectUriHelp() {
+      var element = document.getElementById('redirect-uri-help');
+      if (element) element.textContent = redirectUri();
+    }
+
+    function renderPublicClientId() {
+      var input = document.getElementById('public-client-id');
+      if (input && document.activeElement !== input) input.value = spotifyClientId();
+    }
+
+    function savePublicClientId() {
+      var input = document.getElementById('public-client-id');
+      if (!input) return;
+      var value = String(input.value || '').replace(/\s+/g, '').toLowerCase();
+      if (!isValidClientId(value)) {
+        toast('Un Client ID Spotify fait exactement 32 caractères (' + value.length + ' ici).');
+        return;
+      }
+      if (!state.db.settings) state.db.settings = {};
+      state.db.settings.spotifyClientId = value;
+      saveDb();
+      renderPublicClientId();
+      renderClientIdWarning();
+      initSpotifyDiag();
+      toast('Client ID enregistré : la connexion Spotify est prête sur cet appareil.');
+    }
+
+    function clientIdProblem() {
+      if (isValidClientId(spotifyClientId())) return '';
+      return 'Le Client ID Spotify enregistré dans la version en ligne est incomplet (' +
+        spotifyClientId().length + ' caractères au lieu de 32), donc Spotify refuse la connexion. ' +
+        'Colle le Client ID complet (32 caractères) dans le champ ci-dessous, puis touche « Enregistrer » : c\'est tout, aucun mot de passe ni jeton à créer. ' +
+        'Pour le corriger sur un autre appareil : ouvre le site avec ?client=TON_CLIENT_ID à la fin de l\'adresse.';
+    }
+
+    function renderClientIdWarning() {
+      var box = document.getElementById('spotify-client-warning');
+      if (!box) return;
+      var problem = clientIdProblem();
+      if (!problem) {
+        box.style.display = 'none';
+        box.innerHTML = '';
+        return;
+      }
+      box.style.display = 'block';
+      box.innerHTML = '<strong>Connexion Spotify impossible sur ce site.</strong><br>' +
+        escapeHtml(problem) +
+        '<br><br>Adresse exacte à déclarer dans le tableau de bord Spotify (onglet Redirect URIs) :<br><code>' +
+        escapeHtml(redirectUri()) + '</code>';
+    }
+
+    function spotifyErrorMessage(detail) {
+      var text = String(detail || '');
+      if (/redirect/i.test(text)) {
+        return 'Spotify refuse cette adresse. Ajoute exactement ' + redirectUri() +
+          ' dans les « Redirect URIs » du tableau de bord Spotify, puis réessaie.';
+      }
+      if (/client/i.test(text)) {
+        return 'Spotify refuse le Client ID (' + spotifyClientId().length +
+          ' caractères ici, 32 attendus). Vérifie-le dans le tableau de bord Spotify.';
+      }
+      return 'Connexion Spotify refusée : ' + (text || 'réponse inattendue de Spotify') + '.';
+    }
+
+    function checkSpotifyAuthError() {
+      var params;
+      try { params = new URLSearchParams(location.search); } catch (error) { return; }
+      var errorCode = params.get('error');
+      if (!errorCode) return;
+      var messages = {
+        access_denied: 'Connexion Spotify annulée.',
+        invalid_client: 'Spotify refuse le Client ID de ce site. Corrige-le dans Réglages → Réglages développeur (privé).',
+        unauthorized_client: 'Ce compte Spotify n\'est pas autorisé : ajoute-le dans « User Management » du tableau de bord Spotify (5 comptes maximum en mode développement).',
+        invalid_request: 'Spotify a refusé la demande. Vérifie l\'adresse de redirection déclarée : ' + redirectUri()
+      };
+      toast(messages[errorCode] || ('Spotify : ' + errorCode));
+      params.delete('error');
+      params.delete('state');
+      var rest = params.toString();
+      try {
+        history.replaceState(null, '', location.pathname + (rest ? '?' + rest : '') + location.hash);
+      } catch (error) { /* ignore */ }
+    }
+
+    function applyClientIdFromUrl() {
+      var params;
+      try { params = new URLSearchParams(location.search); } catch (error) { return; }
+      var value = String(params.get('client') || '').replace(/\s+/g, '');
+      if (!value) return;
+      if (!isValidClientId(value)) {
+        toast('Le paramètre ?client= doit contenir 32 caractères hexadécimaux.');
+        return;
+      }
+      if (!state.db.settings) state.db.settings = {};
+      state.db.settings.spotifyClientId = value.toLowerCase();
+      saveDb();
+      params.delete('client');
+      var rest = params.toString();
+      try {
+        history.replaceState(null, '', location.pathname + (rest ? '?' + rest : '') + location.hash);
+      } catch (error) { /* ignore */ }
+      renderClientIdWarning();
+      initSpotifyDiag();
+      toast('Client ID Spotify enregistré sur cet appareil.');
+    }
+
 
     function spotifyClientId() {
       return (state.db && state.db.settings && state.db.settings.spotifyClientId) || SPOTIFY_CLIENT_ID_DEFAULT;
@@ -3682,9 +3871,13 @@
           code_challenge: base64Url(digest)
         });
         var authUrl = 'https://accounts.spotify.com/authorize?' + params.toString();
+        if (document.documentElement.getAttribute('data-layout') === 'phone') {
+          location.href = authUrl;
+          return;
+        }
         var popup = window.open(authUrl, 'rezmusic-spotify', 'width=520,height=760');
         if (!popup) {
-          toast('Popup bloquée : autorise-la ou utilise « Ouvrir dans un onglet ».');
+          toast('Popup bloquée : on ouvre la connexion dans cet onglet.');
           location.href = authUrl;
         }
       }).catch(function () {
@@ -3761,7 +3954,12 @@
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: body.toString()
       }).then(function (res) {
-        if (!res.ok) throw new Error('Connexion Spotify refusée. Vérifiez l\'URI de redirection dans le tableau de bord Spotify.');
+        if (!res.ok) {
+          return res.json().catch(function () { return null; }).then(function (body) {
+            var detail = body && (body.error_description || body.error);
+            throw new Error(spotifyErrorMessage(detail));
+          });
+        }
         return res.json();
       }).then(function (token) {
         sessionStorage.removeItem('rezmusic.pkce');
@@ -4658,6 +4856,7 @@
       session.remote = null;
       session.status = 'connecting';
       renderSessionUi();
+      renderShareUi();
 
       loadMqtt().then(function (mqtt) {
         var client = mqtt.connect(SESSION_BROKER, {
@@ -4717,7 +4916,9 @@
       session.remote = null;
       session.people = {};
       session.status = 'inactive';
+      if (audioShare.stream) stopAudioShare();
       if (!silent) { renderSessionUi(); toast('Session quittée.'); }
+      renderShareUi();
     }
 
     function publishPresence(kind) {
@@ -4765,6 +4966,7 @@
       var data;
       try { data = JSON.parse(String(payload)); } catch (error) { return; }
       if (!data || data.id === session.clientId) return;
+      if (handleRtcMessage(data)) return;
 
       if (data.type === 'bye') {
         delete session.people[data.id];
@@ -4844,6 +5046,7 @@
             playing: state.playingVia === 'spotify'
               ? !!(spotify.lastState && !spotify.lastState.paused)
               : !audio.paused,
+            spotifyId: own.spotifyId || '',
             hostName: activeProfile() ? activeProfile().name : 'Moi',
             hostEmoji: activeProfile() ? activeProfile().emoji : '🎧'
           };
@@ -4854,6 +5057,7 @@
           artist: session.remote.track.artist,
           artwork: session.remote.track.artwork || '',
           playing: !!session.remote.playing,
+          spotifyId: session.remote.track.spotifyId || '',
           hostName: session.remote.hostName || 'Hôte',
           hostEmoji: session.remote.hostEmoji || '🎧'
         };
@@ -4891,6 +5095,17 @@
           info.appendChild(who);
           card.appendChild(info);
           live.appendChild(card);
+          if (shown.spotifyId) {
+            var opener = document.createElement('button');
+            opener.className = 'btn secondary';
+            opener.style.width = '100%';
+            opener.style.marginTop = '10px';
+            opener.textContent = '▶ Ouvrir ce titre dans mon Spotify';
+            opener.addEventListener('click', function () {
+              window.open('https://open.spotify.com/track/' + shown.spotifyId, '_blank', 'noopener');
+            });
+            live.appendChild(opener);
+          }
         }
       }
 
@@ -4923,6 +5138,168 @@
           people.appendChild(selfRow);
         }
       }
+    }
+
+    /* ---------- partage de son en direct (WebRTC) ---------- */
+    var audioShare = { stream: null, pc: null, active: false };
+    var listenPeer = null;
+    var sessionRemoteAudio = null;
+
+    function shareSupported() {
+      return !!(navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia);
+    }
+
+    function publishSessionMessage(payload) {
+      if (!session.client || !session.code) return;
+      payload.id = session.clientId;
+      payload.at = Date.now();
+      session.client.publish(session.topic, JSON.stringify(payload));
+    }
+
+    function renderShareUi() {
+      var hostBox = document.getElementById('session-share');
+      var listenBox = document.getElementById('session-listen');
+      var shareBtn = document.getElementById('btn-share-audio');
+      var stopBtn = document.getElementById('btn-stop-share');
+      var listenBtn = document.getElementById('btn-listen');
+      var status = document.getElementById('share-status');
+      var active = !!session.code;
+
+      if (hostBox) hostBox.style.display = active && session.isHost ? 'block' : 'none';
+      if (listenBox) listenBox.style.display = active && !session.isHost ? 'block' : 'none';
+      if (shareBtn) shareBtn.style.display = audioShare.stream ? 'none' : 'block';
+      if (stopBtn) stopBtn.style.display = audioShare.stream ? 'block' : 'none';
+      if (listenBtn) listenBtn.style.display = sessionRemoteAudio && sessionRemoteAudio.srcObject ? 'none' : 'block';
+      if (status) {
+        if (audioShare.stream) status.textContent = 'Partage actif : le son part de la fenêtre que tu as choisie.';
+        else if (!shareSupported()) status.textContent = 'Ce navigateur ne sait pas partager le son (iPhone/iPad notamment). Depuis un ordinateur, Chrome ou Edge fonctionnent.';
+        else status.textContent = 'Choisis l\'onglet ou l\'écran en cochant « Partager l\'audio ». Sans cette case, l\'invité n\'entendra rien.';
+      }
+    }
+
+    function startAudioShare() {
+      if (!session.code || !session.isHost) return;
+      if (!shareSupported()) {
+        toast('Ce navigateur ne permet pas de partager le son. Utilise Chrome ou Edge sur ordinateur.');
+        return;
+      }
+      navigator.mediaDevices.getDisplayMedia({ video: true, audio: true }).then(function (stream) {
+        var audioTracks = stream.getAudioTracks();
+        stream.getVideoTracks().forEach(function (track) { track.stop(); stream.removeTrack(track); });
+        if (!audioTracks.length) {
+          toast('Aucune piste audio : recommence et coche « Partager l\'audio ».');
+          return;
+        }
+        audioShare.stream = stream;
+        audioTracks[0].addEventListener('ended', stopAudioShare);
+        var pc = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] });
+        audioShare.pc = pc;
+        audioTracks.forEach(function (track) { pc.addTrack(track, stream); });
+        pc.onicecandidate = function (event) {
+          if (event.candidate) publishSessionMessage({ type: 'rtc-ice', from: session.clientId, ice: event.candidate });
+        };
+        pc.onconnectionstatechange = function () {
+          if (pc.connectionState === 'connected') toast('Un auditeur est connecté au direct.');
+          if (pc.connectionState === 'failed' || pc.connectionState === 'disconnected') {
+            toast('Connexion du direct interrompue (réseau trop strict ?).');
+          }
+        };
+        return pc.createOffer({ offerToReceiveAudio: false }).then(function (offer) {
+          return pc.setLocalDescription(offer);
+        }).then(function () {
+          publishSessionMessage({ type: 'rtc-offer', from: session.clientId, sdp: pc.localDescription });
+          renderShareUi();
+          toast('Partage démarré : ton ami touche « Écouter le direct ».');
+        });
+      }).catch(function (error) {
+        toast('Partage annulé : ' + error.message);
+      });
+    }
+
+    function stopAudioShare() {
+      if (audioShare.stream) {
+        audioShare.stream.getTracks().forEach(function (track) { track.stop(); });
+      }
+      audioShare.stream = null;
+      if (audioShare.pc) {
+        try { audioShare.pc.close(); } catch (error) { /* ignore */ }
+      }
+      audioShare.pc = null;
+      if (session.code) publishSessionMessage({ type: 'rtc-stop', from: session.clientId });
+      renderShareUi();
+    }
+
+    function playRemoteAudio() {
+      if (!sessionRemoteAudio || !sessionRemoteAudio.srcObject) {
+        toast('En attente du partage de l\'hôte…');
+        return;
+      }
+      sessionRemoteAudio.play().then(function () {
+        var element = document.getElementById('session-remote-audio');
+        if (element) element.style.display = 'block';
+        renderShareUi();
+      }).catch(function (error) {
+        toast('Lecture bloquée : touche ▶ sur le lecteur. ' + error.message);
+      });
+    }
+
+    function handleRtcMessage(data) {
+      if (data.type === 'rtc-offer' && !session.isHost) {
+        if (listenPeer) {
+          try { listenPeer.close(); } catch (error) { /* ignore */ }
+        }
+        var pc = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] });
+        listenPeer = pc;
+        pc.onicecandidate = function (event) {
+          if (event.candidate) publishSessionMessage({ type: 'rtc-ice', to: data.from, ice: event.candidate });
+        };
+        pc.ontrack = function (event) {
+          sessionRemoteAudio = document.getElementById('session-remote-audio');
+          if (!sessionRemoteAudio) return;
+          try {
+            sessionRemoteAudio.srcObject = event.streams[0] || new MediaStream([event.track]);
+          } catch (error) {
+            sessionRemoteAudio.srcObject = new MediaStream([event.track]);
+          }
+          sessionRemoteAudio.style.display = 'block';
+          sessionRemoteAudio.play().catch(function () { /* geste requis */ });
+          renderShareUi();
+          toast('Direct disponible : touche « Écouter le direct » si tu n\'entends rien.');
+        };
+        pc.setRemoteDescription(new RTCSessionDescription(data.sdp)).then(function () {
+          return pc.createAnswer();
+        }).then(function (answer) {
+          return pc.setLocalDescription(answer);
+        }).then(function () {
+          publishSessionMessage({ type: 'rtc-answer', to: data.from, sdp: pc.localDescription });
+        }).catch(function () { /* ignore */ });
+        return true;
+      }
+
+      if (data.type === 'rtc-answer' && session.isHost && audioShare.pc) {
+        audioShare.pc.setRemoteDescription(new RTCSessionDescription(data.sdp)).catch(function () { /* ignore */ });
+        return true;
+      }
+
+      if (data.type === 'rtc-ice') {
+        if (data.to && data.to !== session.clientId) return true;
+        var peer = session.isHost ? audioShare.pc : listenPeer;
+        if (!peer) return true;
+        peer.addIceCandidate(new RTCIceCandidate(data.ice)).catch(function () { /* ignore */ });
+        return true;
+      }
+
+      if (data.type === 'rtc-stop' && !session.isHost) {
+        if (sessionRemoteAudio) {
+          sessionRemoteAudio.srcObject = null;
+          sessionRemoteAudio.style.display = 'none';
+        }
+        renderShareUi();
+        toast('L\'hôte a arrêté le partage du son.');
+        return true;
+      }
+
+      return false;
     }
 
     /* ---------- format PC / telephone ---------- */
@@ -5073,6 +5450,11 @@
     updateHistoryCount();
     handleHash();
     renderPlaybackModeUi();
+    checkSpotifyAuthError();
+    applyClientIdFromUrl();
+    renderClientIdWarning();
+    renderPublicClientId();
+    renderRedirectUriHelp();
     renderPlaylists();
     restoreSpotifySession();
     handleSpotifyRedirect();

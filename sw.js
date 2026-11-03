@@ -1,6 +1,6 @@
 // Service Worker RezMusic
 // Stratégie : réseau d'abord, cache de secours (évite de figer une ancienne version).
-const CACHE = 'rezmusic-v27';
+const CACHE = 'rezmusic-v32';
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();

@@ -746,3 +746,204 @@ Auteur de la version : Buffy (agent de code)
 1. Choix de la durée de l'animation (courte / normale / désactivée) dans les Réglages.
 2. Animation de transition entre les onglets.
 3. Écran « premier lancement » qui présente les 3 étapes (profil, Spotify, session).
+
+
+---
+
+# RezMusic - Journal de Projet & Idées (v28)
+Date : 3 Novembre 2026
+Auteur de la version : Buffy (agent de code)
+
+## 99. Bug signalé par l'utilisateur
+- Son ami ouvre le site déployé (`rezmusic.vercel.app`) et, en cliquant sur « Se connecter avec Spotify », reçoit : **« Client ID Spotify invalide (29 caractères au lieu de 32). Copie-le depuis le tableau de bord. »**
+- **Cause exacte** : `SPOTIFY_CLIENT_ID_DEFAULT` dans `index.html` vaut `3a9cd2cd1d445e693501c9e29a7b3`, soit **29 caractères**. Un Client ID Spotify en fait **32**. L'utilisateur, lui, avait enregistré le vrai identifiant dans le menu privé : il est stocké dans **son** `localStorage` (`state.db.settings.spotifyClientId`) et ne part donc **jamais** avec le fichier déployé. Le navigateur de l'ami n'a rien, il retombe sur la constante cassée.
+- **Ce n'est pas un problème de compte partagé** : chaque navigateur garde son propre Client ID et son propre jeton. Le défaut était simplement que la valeur par défaut du fichier est invalide.
+
+## 100. Ce qui a été fait en v28
+1. **Encadré d'avertissement visible** dans la carte Spotify des Réglages (`#spotify-client-warning`) : il apparaît uniquement si le Client ID n'a pas 32 caractères, explique le problème en clair et affiche **l'adresse exacte de redirection** à déclarer dans le tableau de bord Spotify (bouton/copie facile).
+2. **Correction sans reconstruire le site** : `?client=CLIENT_ID_32_CARACTERES` à la fin de l'adresse enregistre l'identifiant dans le navigateur, nettoie l'URL (`history.replaceState`) et affiche un message. L'utilisateur peut donc réparer l'appareil de son ami en lui envoyant un lien.
+3. **Messages d'erreur Spotify traduits** : `access_denied`, `invalid_client`, `unauthorized_client`, `invalid_request` et les refus d'URI de redirection donnent maintenant une phrase utile au lieu d'un code brut (`checkSpotifyAuthError`, `spotifyErrorMessage`).
+4. L'enregistrement du Client ID dans le menu privé passe désormais la valeur en minuscules, rafraîchit l'encadré d'avertissement et le diagnostic.
+
+## 101. Ce qu'il reste à faire côté utilisateur (important)
+- Remplacer la constante `SPOTIFY_CLIENT_ID_DEFAULT` par le **vrai Client ID à 32 caractères**, sinon chaque nouveau visiteur verra encore l'avertissement (même si le bouton `?client=` permet de contourner).
+- Dans le tableau de bord Spotify, **Redirect URIs** doit contenir l'adresse réellement utilisée : `https://rezmusic.vercel.app/` (et non `rezmusicv19.vercel.app`). Sinon l'erreur suivante sera « INVALID_CLIENT: Invalid redirect URI ».
+- En mode développement, **User Management** limite à **5 comptes** : le compte Spotify de l'ami doit être ajouté, sinon `unauthorized_client`.
+- Faire **Ctrl + F5** après le redéploiement (cache `rezmusic-v28`).
+
+## 102. Fichiers modifiés en v28
+- `index.html` : `clientIdProblem`, `renderClientIdWarning`, `spotifyErrorMessage`, `checkSpotifyAuthError`, `applyClientIdFromUrl`, encadré `#spotify-client-warning`, version affichée v28.
+- `sw.js` : cache passé en `rezmusic-v28`.
+- `README.md` : section « Pourquoi un ami voit… » avec les deux corrections et les vérifications du tableau de bord.
+- `saveia.txt` : cette section (v13 à v27 intactes, ajout seul).
+
+## 103. Vérifications faites en v28
+- `node --check` sur le script extrait : OK.
+- Nouveaux éléments uniques : `spotify-client-warning` présent une seule fois ; 5 nouvelles fonctions déclarées une seule fois.
+- L'ancien message d'erreur de `completeSpotifyLogin` est bien remplacé (plus de « Vérifiez l'URI de redirection » brut).
+- Archive `rezmusic-v28.zip` (4 fichiers) testée (`testzip()` = None) et servie en HTTP 200.
+- **Non vérifié par l'agent** : un vrai parcours OAuth Spotify (exige le Client ID correct, un compte Premium et les Redirect URIs du tableau de bord). Le diagnostic affiché a été relu dans le code, pas testé contre l'API réelle.
+
+## 104. Idées suivantes (non faites)
+1. Mettre le vrai Client ID dans le fichier une fois pour toutes (dès que l'utilisateur le fournit).
+2. Afficher un badge « Spotify prêt » dans l'en-tête quand le Client ID et le compte sont bons.
+3. Bouton « copier l'adresse de redirection » dans le menu privé.
+
+
+---
+
+# RezMusic - Journal de Projet & Idées (v29)
+Date : 3 Novembre 2026
+Auteur de la version : Buffy (agent de code)
+
+## 105. Demande de l'utilisateur pour la v29
+- L'ami voit encore « Client ID Spotify invalide (29 caractères au lieu de 32) ».
+- « Il faut que les gens puissent se connecter sans jeton d'API comme moi ; dans les applications comme Eevee (ibaila) et Cider ils peuvent se connecter à leur compte Spotify. »
+
+## 106. Pourquoi Cider / Eevee y arrivent et pas un site web
+- Cider et Eevee sont des **applications de bureau** (Electron/Tauri), pas des pages web. Elles n'utilisent pas l'API Web officielle : elles parlent aux **endpoints internes du lecteur** (WebSocket « dealer », `spclient`, protobuf) avec un cookie de session Spotify.
+- Depuis une page web, ces requêtes sont **impossibles** : CORS bloque les appels, le WebSocket et le protocole binaire ne sont pas reproductibles en JS navigateur, et Spotify l'interdit dans ses conditions (risque de bannissement du compte).
+- Un site statique sur Vercel n'a **aucun serveur** pour contourner CORS ou porter ce WebSocket.
+- Conclusion honnête : pour un site, **OAuth PKCE est la seule voie légale et fonctionnelle**. Ce n'est pas un « jeton d'API à créer » : l'utilisateur clique, tape son mot de passe chez Spotify, c'est fini. Le seul vrai blocage reste le **Client ID invalide dans le fichier déployé**.
+- Rappel : l'ami était encore sur l'ancienne version (aucun encadré d'avertissement visible sur sa capture), donc il n'avait même pas les correctifs de la v28.
+
+## 107. Ce qui a été fait en v29
+1. **Champ « Client ID de l'application » dans les Réglages, sans mot de passe** (`#public-client-id` + `#btn-save-public-client-id`) : on colle les 32 caractères, on enregistre, et la connexion Spotify fonctionne sur cet appareil. Plus besoin du menu privé ni d'un redéploiement.
+2. **Texte pédagogique** dans la carte : « Ce n'est pas un jeton personnel et tu n'as rien à créer : tu te connectes avec ton compte Spotify, le jeton est généré automatiquement. »
+3. L'encadré d'avertissement renvoie désormais vers ce champ et non vers le menu privé.
+4. `renderPublicClientId()` garde le champ synchronisé (sans écraser une saisie en cours) ; l'enregistrement passe la valeur en minuscules, met à jour l'encadré, le diagnostic et la liste.
+
+## 108. Fichiers modifiés en v29
+- `index.html` : champ public + bouton, `renderPublicClientId`, `savePublicClientId`, textes, version affichée v29.
+- `sw.js` : cache passé en `rezmusic-v29`.
+- `README.md` : section « Pourquoi Cider / Eevee arrivent à se connecter sans Client ID ».
+- `saveia.txt` : cette section (v13 à v28 intactes, ajout seul).
+
+## 109. Vérifications faites en v29
+- `node --check` sur le script extrait : OK.
+- Éléments uniques : `public-client-id`, `btn-save-public-client-id` ; fonctions `renderPublicClientId`, `savePublicClientId` déclarées une seule fois.
+- Archive `rezmusic-v29.zip` (4 fichiers) testée (`testzip()` = None) et servie en HTTP 200.
+- **Non vérifié par l'agent** : un vrai parcours OAuth Spotify (il faut le Client ID correct à 32 caractères, un compte Premium et les Redirect URIs du tableau de bord).
+
+## 110. Idées suivantes (non faites)
+1. Mettre le vrai Client ID dans le fichier dès que l'utilisateur le fournit.
+2. Bouton « copier l'adresse de redirection » à côté du champ Client ID.
+3. Vérifier automatiquement le Client ID en interrogeant le point d'autorisation Spotify.
+
+
+---
+
+# RezMusic - Journal de Projet & Idées (v30)
+Date : 3 Novembre 2026
+Auteur de la version : Buffy (agent de code)
+
+## 111. Question de l'utilisateur pour la v30
+- « Ceux qui n'ont pas de compte Spotify développeur, comment ils font pour connecter leur Spotify ? Peut-on faire en sorte qu'en cliquant sur "Se connecter avec Spotify" ça leur demande e-mail et mot de passe, comme une application Spotify basique ? »
+
+## 112. Réponse
+- **Oui, c'est déjà le cas : aucun ami n'a besoin d'un compte développeur.** Le Client ID appartient au site, pas aux utilisateurs. En cliquant sur le bouton, l'app ouvre `accounts.spotify.com/authorize`, la page officielle où Spotify demande **e-mail et mot de passe** (ou un bouton « Continuer avec Google/Apple/Facebook »), exactement comme l'app Spotify normale. Le jeton est ensuite généré automatiquement et gardé dans le navigateur.
+- Il n'y a donc **rien de plus à coder côté login** : ce qui bloque aujourd'hui les amis, c'est (1) le Client ID incomplet dans le fichier déployé, (2) une adresse de redirection non déclarée, (3) le compte de l'ami absent de *User Management* (5 maximum en mode développement).
+- Rappel : RezMusic ne peut pas afficher elle-même un formulaire e-mail/mot de passe Spotify — ce serait du phishing, et Spotify l'interdit. Le formulaire est toujours celui de Spotify, ce qui est justement la preuve que le compte reste à son propriétaire.
+- Cider / Eevee restent hors de portée d'un site web (endpoints internes, CORS, conditions d'utilisation).
+
+## 113. Ce qui a été fait en v30
+1. **Connexion en plein écran sur téléphone** : plus de popup (souvent bloquée sur mobile), `location.href = authUrl` direct. Sur ordinateur la popup reste, avec repli automatique sur l'onglet courant si elle est bloquée.
+2. **Aide intégrée** dans la carte Spotify (`<details id="spotify-help">`) : les 4 étapes du propriétaire, l'adresse de redirection exacte, la limite de 5 comptes, la condition Premium.
+3. **Bouton « Copier l'adresse de redirection »** (`#btn-copy-redirect`) pour la coller dans le tableau de bord Spotify.
+4. `renderRedirectUriHelp()` remplit l'adresse de redirection affichée dans l'aide, au démarrage et après enregistrement du Client ID.
+
+## 114. Fichiers modifiés en v30
+- `index.html` : connexion plein écran sur téléphone, aide dépliable, bouton copier, CSS `.help-box`, version affichée v30.
+- `sw.js` : cache passé en `rezmusic-v30`.
+- `README.md` : tableau des symptômes/causes/solutions et section « aucun compte développeur nécessaire ».
+- `saveia.txt` : cette section (v13 à v29 intactes, ajout seul).
+
+## 115. Vérifications faites en v30
+- `node --check` sur le script extrait : OK.
+- Éléments uniques : `spotify-help`, `redirect-uri-help`, `btn-copy-redirect` ; fonction `renderRedirectUriHelp` déclarée une seule fois.
+- Archive `rezmusic-v30.zip` (4 fichiers) testée (`testzip()` = None) et servie en HTTP 200.
+- **Non vérifié par l'agent** : le parcours OAuth réel (Client ID valide, Redirect URIs déclarées, compte de test ajouté dans User Management). Le comportement popup/redirection est relu dans le code, pas observé sur un téléphone réel.
+
+## 116. Idées suivantes (non faites)
+1. Détecter automatiquement le Client ID valide en testant une requête vers `accounts.spotify.com` avant d'ouvrir la fenêtre.
+2. Écran de bienvenue qui explique les 3 étapes au tout premier lancement.
+3. Message dédié quand Spotify renvoie « user not registered » (avec lien direct vers User Management).
+
+
+---
+
+# RezMusic - Journal de Projet & Idées (v31)
+Date : 3 Novembre 2026
+Auteur de la version : Buffy (agent de code)
+
+## 117. Question de l'utilisateur pour la v31
+- « Si c'est moi qui héberge la session, qui lance la musique et qui a le Premium, lui il peut se connecter et écouter avec moi même s'il n'a pas le Premium, non ? »
+
+## 118. Réponse honnête
+- **Non, pas par RezMusic.** Le son ne circule pas d'un appareil à l'autre : chaque navigateur joue son propre audio, et le lecteur web Spotify (Web Playback SDK) refuse les comptes gratuits. Aucun site ne peut relayer l'audio (DRM + conditions Spotify), et il n'existe pas de "partage de session Spotify" officiel entre deux comptes.
+- **Ce qui marche, et que l'app permet maintenant** : l'invité voit le titre en direct et le lance **dans sa propre application Spotify**, avec un compte gratuit, en un tap. Ils écoutent donc ensemble le même morceau — deux appareils, deux sons, un seul morceau.
+- Pour un vrai flux audio unique, il faut passer par un partage d'écran/son Discord ou un appel vocal : c'est hors du web, et RezMusic ne peut pas le faire.
+
+## 119. Ce qui a été fait en v31
+1. **Bouton « ▶ Ouvrir ce titre dans mon Spotify »** dans le panneau En direct : il ouvre `https://open.spotify.com/track/<id>` dans un nouvel onglet (sur téléphone, cela bascule dans l'app Spotify). Visible pour l'invité comme pour l'hôte.
+2. Le morceau diffusé transmet désormais son **identifiant Spotify** (`spotifyId`) dans le message de session, y compris quand l'hôte écoute un extrait de 30 s.
+3. **Texte de la carte session réécrit** : « Le son ne circule jamais d'un appareil à l'autre », la solution sans Premium (ouvrir le titre dans son Spotify), et l'alternative Discord pour un vrai partage audio.
+
+## 120. Fichiers modifiés en v31
+- `index.html` : `spotifyId` dans l'état de session, bouton d'ouverture, texte de la carte session, version affichée v31.
+- `sw.js` : cache passé en `rezmusic-v31`.
+- `README.md` : section « Écouter à plusieurs : ce qui marche et ce qui est impossible ».
+- `saveia.txt` : cette section (v13 à v30 intactes, ajout seul).
+
+## 121. Vérifications faites en v31
+- `node --check` sur le script extrait : OK.
+- `spotifyId` présent dans les deux branches de `renderSessionUi` (hôte et invité) ; bouton ajouté une seule fois après la carte live.
+- Archive `rezmusic-v31.zip` (4 fichiers) testée (`testzip()` = None) et servie en HTTP 200.
+- **Non vérifié par l'agent** : ouverture réelle de l'application Spotify depuis le bouton (dépend de l'appareil et du compte), et session à deux appareils.
+
+## 122. Idées suivantes (non faites)
+1. Bouton « Synchroniser » qui relance le titre à la même position chez l'invité (dans son app Spotify).
+2. Afficher la position en cours du morceau chez l'invité (barre de progression partagée).
+3. Mode « écoute décalée » : l'invité lance le morceau 2 secondes après l'hôte.
+
+
+---
+
+# RezMusic - Journal de Projet & Idées (v32)
+Date : 3 Novembre 2026
+Auteur de la version : Buffy (agent de code)
+
+## 123. Question de l'utilisateur pour la v32
+- « Mais si je veux qu'il écoute depuis mon app à moi, même direct, et pas que ça lui lance Spotify de force, ça marche pas ? »
+
+## 124. Réponse et solution retenue
+- **Faire entendre le son de l'hôte dans l'app est possible**, mais pas en relayant le flux Spotify : on partage le **son de l'appareil** de l'hôte, comme un partage d'écran Discord.
+- Implémenté avec `getDisplayMedia({ video: true, audio: true })` côté hôte + **WebRTC** (RTCPeerConnection, STUN `stun.l.google.com:19302`), la signalisation (offre / réponse / candidats ICE) passant par le même canal MQTT que la session.
+- L'invité reçoit la piste audio et l'écoute dans un `<audio>` de la session : **aucun compte Spotify, aucun Premium** nécessaire de son côté.
+- Limites assumées et affichées : l'hôte doit être sur **ordinateur Chrome/Edge** (iOS interdit la capture audio), il doit cocher « Partager l'audio », le partage s'arrête si l'onglet ferme, et sans serveur TURN certains réseaux stricts bloquent la connexion directe.
+
+## 125. Ce qui a été fait en v32
+1. **Bloc « En direct » côté hôte** : bouton « 🔊 Partager le son de mon PC », bouton « Arrêter le partage », texte d'état (support du navigateur, rappel de cocher « Partager l'audio »).
+2. **Bloc côté invité** : bouton « 🔊 Écouter le direct » et lecteur `<audio controls>` ; message si le navigateur bloque la lecture automatique.
+3. **Signalisation WebRTC** dans les messages de session : `rtc-offer`, `rtc-answer`, `rtc-ice` (ciblés par `to`), `rtc-stop`.
+4. `publishSessionMessage()` factorise l'envoi (ajoute `id` et `at`).
+5. Nettoyage : `stopAudioShare()` appelé à la sortie de session (fermeture des pistes et de la peer connection).
+6. Texte de la carte session réécrit : deux façons d'écouter ensemble (Spotify perso gratuit, ou partage du son direct).
+
+## 126. Fichiers modifiés en v32
+- `index.html` : boutons de partage, lecteur distant, module `audioShare` / `listenPeer` / `handleRtcMessage`, câblage, textes, version affichée v32.
+- `sw.js` : cache passé en `rezmusic-v32`.
+- `README.md` : mode d'emploi du partage de son et limites.
+- `saveia.txt` : cette section (v13 à v31 intactes, ajout seul).
+
+## 127. Vérifications faites en v32
+- `node --check` sur le script extrait : OK.
+- Nouveaux éléments uniques : `session-share`, `btn-share-audio`, `btn-stop-share`, `share-status`, `session-listen`, `btn-listen`, `session-remote-audio`.
+- Aucune collision de noms (`publishSessionMessage`, `audioShare`, `listenPeer`, `sessionRemoteAudio` absents avant patch).
+- Archive `rezmusic-v32.zip` (4 fichiers) testée (`testzip()` = None) et servie en HTTP 200.
+- **Non vérifié par l'agent** : la connexion WebRTC réelle entre deux appareils (il faut un second appareil, et Chrome/Edge sur ordinateur côté hôte). Le chemin de capture et la signalisation sont relus dans le code, pas testés en conditions réelles.
+
+## 128. Idées suivantes (non faites)
+1. Serveur TURN gratuit (ex. Cloudflare Calls) pour les réseaux stricts.
+2. Volume et sourdine côté invité.
+3. Indicateur « 1 auditeur connecté » dans le mini-lecteur.

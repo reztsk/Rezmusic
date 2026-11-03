@@ -1,51 +1,61 @@
-# RezMusic — v27
+# RezMusic — v32
 
 Application web musicale collaborative, gratuite, sans base de données.
 
-## Nouveautés v27
+## Écouter ensemble : le son direct dans l'app (nouveau)
 
-- **Écran de lancement animé** : au démarrage, un vinyle néon rouge tourne, le nom RezMusic apparaît, une barre de chargement se remplit et trois status défilent (« Démarrage… », « Chargement du lecteur… », « Prêt. »). L'écran s'efface tout seul (environ 1,2 s), un clic ou un tap le passe immédiatement, et un filet de sécurité CSS l'efface même si le JavaScript échoue.
-- **Compte Spotify lié à l'appareil** : le jeton reste dans **ce navigateur** et n'est jamais transmis. Réglages → carte Spotify : un identifiant d'appareil est affiché, et un bouton **« Mémoriser ma connexion : activé / désactivé »** permet de ne garder la session que le temps de l'onglet (ordinateur partagé).
-- Rappel des v26 : sessions d'écoute à plusieurs et format PC / téléphone automatique.
+L'hôte partage le son de son ordinateur, l'invité l'écoute **dans RezMusic**, sans compte Spotify et sans Premium.
 
-## Comptes Spotify : qui voit quoi
+1. L'hôte crée la session, puis dans **En direct** touche **« 🔊 Partager le son de mon PC »**.
+2. Le navigateur demande quoi partager : choisir l'**onglet** (Spotify web, RezMusic) ou l'**écran**, en cochant **« Partager l'audio »**. Sans cette case, il n'y a aucun son.
+3. L'invité touche **« 🔊 Écouter le direct »** : le son arrive dans le lecteur audio de la session.
 
-- Chaque visiteur clique sur **Se connecter avec Spotify** et saisit **ses** identifiants sur la page officielle `accounts.spotify.com` — jamais sur RezMusic.
-- Le jeton d'accès qui en résulte est stocké dans le `localStorage` de **son** navigateur (clé `rezmusic.spotify.v1`), avec un identifiant d'appareil. Un jeton venu d'un autre appareil est ignoré.
-- La session d'écoute (MQTT) ne transporte que le titre, l'artiste, la pochette et l'état lecture/pause : **aucun jeton, aucune donnée de compte**.
-- La déconnexion efface le jeton du navigateur (localStorage **et** sessionStorage).
-- **Limite honnête** : RezMusic ne filtre pas par adresse IP, et ne le peut pas utilement — un OAuth Spotify ne fonctionne pas ainsi, et les IP changent (4G, Wi-Fi, VPN). La séparation vient du navigateur, pas du réseau : un même ordinateur partagé garde la connexion tant qu'on ne clique pas sur « Se déconnecter » — d'où le bouton « Mémoriser ma connexion : désactivé » pour les postes partagés.
+Technique : `getDisplayMedia({ audio: true })` côté hôte, puis **WebRTC** (peer connection, STUN Google) avec la signalisation portée par le canal MQTT déjà utilisé pour la session (offre / réponse / candidats ICE).
 
-## Lecture
+### Limites réelles, affichées dans l'app
 
-Deux modes dans les Réglages :
+- **Ordinateur uniquement pour l'hôte** : Chrome et Edge savent capturer l'audio d'un onglet ou du système. **iOS/iPadOS ne le permet pas** (Safari refuse la capture audio), et Firefox ne partage pas l'audio système.
+- **Le partage s'arrête** si l'hôte ferme l'onglet ou arrête le partage.
+- **Réseaux très stricts** (entreprise, certains 4G) : pas de serveur TURN dans RezMusic, donc la connexion directe peut échouer.
+- **Qualité** : Opus compressé (~128 kbit/s), avec une latence de quelques centaines de millisecondes.
+- Le son partagé est celui de la fenêtre choisie : si Spotify joue dans l'app de bureau, il faut partager **l'écran entier** avec l'audio système.
 
-- **♪ Lecture complète** (Spotify, Premium requis) : la recherche interroge Spotify, la lecture se fait dans l'app, avec repli sur le lecteur Spotify intégré si le SDK est indisponible.
-- **▶ Extrait 30 s** : uniquement si l'option est activée.
+## Sans partage de son
 
-## Session à plusieurs : comment ça marche
+- L'invité voit le titre en direct et peut toucher **« ▶ Ouvrir ce titre dans mon Spotify »** pour l'écouter avec son compte gratuit.
+- Un partage dans un appel Discord/vocal reste l'alternative la plus simple pour un flux unique.
 
-1. Celui qui a Spotify ouvre **Communauté → Créer une session** et copie le code à 6 caractères.
-2. L'ami ouvre la même adresse, va dans **Communauté → Rejoindre une session**, entre le code (aucun compte Spotify nécessaire pour suivre).
-3. L'hôte lance un titre : il apparaît chez tout le monde en quelques secondes, avec « en lecture » ou « en pause ».
+## Nouveautés v32
 
-Le son reste sur l'appareil de l'hôte : c'est un partage de ce qui est écouté, pas un flux audio.
+- Partage du son hôte → invité par WebRTC, avec boutons Démarrer / Arrêter et état du partage.
+- Lecteur audio distant dans le panneau session, avec message quand le navigateur bloque la lecture automatique.
+- Message `rtc-stop` pour couper proprement chez l'invité quand l'hôte arrête.
+- Nettoyage automatique du partage quand on quitte la session.
 
-## Paroles : source et synchronisation
+## Comptes Spotify
 
-Spotify ne fournit pas de paroles par son API (`/v1/lyrics` → `410`). RezMusic utilise **LRCLIB** (gratuit, sans clé, CORS ouvert). Le format `syncedLyrics` (`[mm:ss.xx]`) est préféré pour le karaoké.
+- Seul le propriétaire du site crée une application (Client ID). Les amis cliquent sur « Se connecter avec Spotify » et Spotify leur demande **leur e-mail et mot de passe**.
+- Chaque jeton reste dans **son** navigateur (`rezmusic.spotify.v1`) ; la session ne transporte aucun jeton.
+- Champ **Client ID de l'application** dans les Réglages (sans mot de passe), ou `?client=CLIENT_ID_32_CARACTERES`.
 
-## Mode « Son Discord » : la limite
+## Ce qui bloque encore
 
-Le navigateur **ne peut pas lire l'audio de Discord**. Le mode écoute le **micro** : dès qu'une voix est détectée, le volume baisse à 35 %, puis revient 20 s après la dernière voix.
+| Symptôme | Cause | Solution |
+| --- | --- | --- |
+| « Client ID Spotify invalide (29 caractères au lieu de 32) » | valeur par défaut incomplète | coller le vrai Client ID dans les Réglages, ou `?client=…` |
+| « INVALID_CLIENT: Invalid redirect URI » | adresse non déclarée | ajouter l'adresse affichée dans l'aide sous *Redirect URIs* |
+| « unauthorized_client » | compte absent des testeurs | l'ajouter dans *User Management* (5 max en mode développement) |
+| Lecture limitée | compte sans Premium | règle Spotify (lecture web = Premium) |
 
-## Connexion Spotify (admin)
+## Session à plusieurs
 
-Réglages → « Réglages développeur (privé) », ou URL `#admin`. Mot de passe local (SHA-256), Client ID modifiable, diagnostic (compte, URI de redirection, contexte, appareils). **Limite Spotify en mode développement : 5 comptes**, à ajouter dans *User Management*.
+1. **Communauté → Créer une session** : code à 6 caractères.
+2. L'ami ouvre la même adresse, **Rejoindre une session**, entre le code.
+3. L'hôte lance un titre ; il peut aussi partager le son pour que l'invité entende directement.
 
-## Fonctionnalités
+## Paroles
 
-Écran de lancement animé, recherche instantanée, mini-lecteur, playlists déroulantes, import Spotify, paroles synchronisées, volume, historique, notes sur 5, favoris, profils avec code personnel, sessions d'écoute à plusieurs, format PC/téléphone automatique, lecteur immersif, hors-ligne.
+Spotify ne fournit pas de paroles (`/v1/lyrics` → `410`). RezMusic utilise **LRCLIB** (gratuit, sans clé, CORS ouvert).
 
 ## Lancer en local
 
@@ -53,11 +63,11 @@ Réglages → « Réglages développeur (privé) », ou URL `#admin`. Mot de pas
 python3 -m http.server 3000
 ```
 
+Le partage de son exige un contexte sécurisé : `localhost` fonctionne, une adresse `http://` distante non.
+
 ## Déployer sur Vercel (gratuit)
 
 Dépôt GitHub → Vercel → *Add New Project* → preset **Other** → *Deploy*. Puis ajouter l'URL du déploiement dans les Redirect URIs Spotify.
-
-Mise à jour sans supprimer le dépôt : voir `GUIDE-MISE-A-JOUR.md`.
 
 Après un envoi, faire **Ctrl + F5** : le service worker garde l'ancienne page en cache sinon.
 
@@ -65,8 +75,8 @@ Après un envoi, faire **Ctrl + F5** : le service worker garde l'ancienne page e
 
 ```
 index.html   application complète (HTML + CSS + JS, aucune dépendance)
-sw.js        service worker hors-ligne (cache rezmusic-v27)
-saveia.txt   journal complet, v13 → v27 (ajout seul)
+sw.js        service worker hors-ligne (cache rezmusic-v32)
+saveia.txt   journal complet, v13 → v32 (ajout seul)
 GUIDE-MISE-A-JOUR.md   mise à jour GitHub sans suppression
 mettre-a-jour.ps1      script Windows (commit + push)
 README.md    ce fichier
