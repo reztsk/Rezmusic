@@ -68,3 +68,12 @@ GUIDE-MISE-A-JOUR.md   mise à jour GitHub sans suppression
 mettre-a-jour.ps1      script Windows (commit + push)
 README.md    ce fichier
 ```
+
+
+## Aide illustrée : clé API YouTube (v40)
+
+Dans **Réglages → Recherche YouTube → « Comment obtenir cette clé »**, l'aide contient maintenant :
+
+- un lien cliquable vers **console.cloud.google.com** (et un bouton qui ouvre directement la fiche *YouTube Data API v3*) ;
+- quatre écrans schématisés, intégrés en SVG dans `index.html` (aucun fichier image, le zip reste à 4 fichiers) : activer l'API, créer la clé, poser les restrictions (*YouTube Data API v3* + *Sites Web*), copier la clé ;
+- les erreurs courantes : « API key not valid » (clé mal copiée) et « requests from referer are blocked » (adresse du site non déclarée).

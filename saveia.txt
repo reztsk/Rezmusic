@@ -1170,3 +1170,131 @@ Auteur de la version : Buffy (agent de code)
 1. Synchroniser favoris et notes entre amis.
 2. Péremption affichée des profils reçus.
 3. Serveur TURN pour l'audio sur réseaux stricts.
+
+- Complément v37 (aide YouTube) : l'aide intégrée détaille maintenant la création de la clé API — activer YouTube Data API v3, cocher cette API dans « Restrictions d'API », et choisir « Sites Web » dans « Restrictions relatives aux applications » avec `https://TON-SITE.vercel.app/*` (+ `http://localhost:3000/*`), sans jamais « Adresses IP » (la clé est appelée par le navigateur).
+
+
+---
+
+# RezMusic - Journal de Projet & Idées (v38)
+Date : 3 Novembre 2026
+Auteur de la version : Buffy (agent de code)
+
+## 162. Demande de l'utilisateur pour la v38
+- « Fais en sorte que je puisse noter sur 5 depuis la page d'accueil. »
+
+## 163. Ce qui a été fait en v38
+1. **Étoiles dans le lecteur de la page d'accueil** : un bloc `#player-stars` sous le titre et l'artiste du morceau en cours, cinq étoiles cliquables.
+2. `renderPlayerStars()` construit les étoiles à partir de `ratingValue(currentTrack().id)` et se masque s'il n'y a pas de morceau.
+3. `rateCurrentTrack(n)` note le morceau courant via `setRating()` ; un clic sur l'étoile déjà active **retire** la note (0/5), comme dans la bibliothèque.
+4. L'affichage se rafraîchit à chaque changement de morceau (`updatePlayerUi`), après chaque note (`setRating`) et au démarrage.
+5. CSS `.player-stars` : étoiles jaunes avec halo pour la note active, étoiles grisées sinon, léger zoom au survol.
+6. Les étoiles de la recherche (v37) restent en place : on peut noter depuis les résultats **et** depuis le lecteur.
+
+## 164. Fichiers modifiés en v38
+- `index.html` : bloc `#player-stars`, CSS, `renderPlayerStars`/`rateCurrentTrack`, câblage, rafraîchissements, version affichée v38.
+- `sw.js` : cache passé en `rezmusic-v38`.
+- `README.md` : mention de la notation depuis l'accueil.
+- `saveia.txt` : cette section (v13 à v37 intactes, ajout seul).
+
+## 165. Vérifications faites en v38
+- `node --check` sur le script extrait : OK.
+- Élément `player-stars` unique ; fonctions `renderPlayerStars`, `rateCurrentTrack` déclarées une seule fois.
+- `renderPlayerStars()` appelé dans `updatePlayerUi`, `setRating` et au démarrage.
+- Archive `rezmusic-v38.zip` (4 fichiers) testée (`testzip()` = None) et servie en HTTP 200.
+- **Non vérifié par l'agent** : rendu visuel et clic sur les étoiles (pas de navigateur ici).
+
+## 166. Idées suivantes (non faites)
+1. Afficher la moyenne des notes du groupe pour un morceau.
+2. Filtrer la bibliothèque par note minimale.
+3. Noter directement depuis le mini-lecteur.
+
+
+---
+
+# RezMusic - Journal de Projet & Idées (v39)
+Date : 3 Novembre 2026
+Auteur de la version : Buffy (agent de code)
+
+## 167. Demande de l'utilisateur pour la v39
+- « Fais en sorte qu'on voie qui écoute quoi même s'il passe par YouTube, et que sur leur profil on puisse voir les notes qu'ils ont données aux sons qu'ils ont écoutés, et voir aussi l'historique de tout le monde. »
+
+## 168. Analyse
+- **YouTube n'appelait jamais `publishLive()`** : le direct du groupe restait vide, et le heartbeat ne regardait que l'élément audio. D'où « Personne n'écoute pour le moment » alors que le morceau tournait.
+- **Le profil d'un ami ne montrait que ce que le navigateur connaissait** (profils locaux) : notes et historique n'étaient jamais transmis.
+- **Aucune vue d'historique collectif** n'existait.
+
+## 169. Ce qui a été fait en v39
+1. **Direct YouTube** : `publishLive(playing)` appelé depuis `onYouTubeState`, et le heartbeat publie aussi l'écoute YouTube (`getPlayerState() === 1`). Le morceau diffusé transmet maintenant son `id` et sa `source`.
+2. **Présence entre appareils** : `publishLive()` publie aussi sur MQTT (`rezmusic/live/<code>`), et `handleFriendMessage` traite les messages `live` via `handleLivePayload()` — les amis apparaissent donc en direct dans « En direct du groupe », quel que soit le lecteur (Spotify, YouTube, extrait).
+3. **Abonnements** : à la connexion, chaque client s'abonne aux topics `profile` **et** `live` de tous ses amis (`subscribeFriendTopics`) ; à l'ajout d'un ami, abonnement immédiat.
+4. **Profil partagé enrichi** : `mySharedProfile()` transmet pseudo, avatar, **notes** (valeur + titre + artiste) et **20 derniers sons écoutés**. À la réception, tout est stocké dans `state.db.remoteProfiles` (via `friendProfiles()`).
+5. **Profil d'un ami** : `openProfile()` utilise `profileByCode(code) || remoteProfileShape(code)`, donc les notes s'affichent même si le profil vient d'un autre appareil ; nouvelle section « Son historique » (`#other-history`, `renderOtherHistory`).
+6. **Historique du groupe** : nouvelle carte dans Communauté (`#group-history`, `renderGroupHistory`) qui fusionne l'historique de tes profils et celui des amis reçus, trié du plus récent au plus ancien, avec pseudo, avatar, date et heure.
+7. `setRating()` et `addToHistory()` republient le profil (`announceProfile`) pour que les amis voient les nouveautés.
+
+## 170. Fichiers modifiés en v39
+- `index.html` : `#other-history`, `#group-history`, `publishLive` enrichi + MQTT, `onYouTubeState`, abonnements amis, `mySharedProfile`, `remoteProfileShape`, `renderOtherHistory`, `renderGroupHistory`, version affichée v39.
+- `sw.js` : cache passé en `rezmusic-v39`.
+- `README.md` : direct YouTube et partage des notes/historique.
+- `saveia.txt` : cette section (v13 à v38 intactes, ajout seul).
+
+## 171. Vérifications faites en v39
+- `node --check` sur le script extrait : OK.
+- Éléments uniques : `other-history`, `group-history`.
+- Fonctions déclarées une seule fois : `mySharedProfile`, `remoteProfileShape`, `friendLiveTopic`, `subscribeFriendTopics`, `renderOtherHistory`, `renderGroupHistory`.
+- `renderGroupHistory()` appelé dans `renderLiveUi`, après réception d'un profil, après un ajout d'historique et au démarrage.
+- Archive `rezmusic-v39.zip` (4 fichiers) testée (`testzip()` = None) et servie en HTTP 200.
+- **Non vérifié par l'agent** : échange réel entre deux appareils (nécessite deux navigateurs ouverts en même temps) et rendu visuel.
+
+## 172. Limites assumées
+- L'échange passe par un **broker MQTT public** : les deux appareils doivent être ouverts en même temps pour se voir, et n'importe qui connaissant un code de profil peut lire ses infos (pseudo, notes, historique). Pas de chiffrement, pas de compte.
+- L'historique partagé est limité aux **20 derniers sons** par personne.
+
+## 173. Idées suivantes (non faites)
+1. Chiffrer les messages de profil avec une clé dérivée du code.
+2. Bouton « Écouter ce son » depuis l'historique d'un ami.
+3. Moyenne des notes du groupe par morceau.
+
+- Complément v39 (robustesse) : `handleLivePayload()` remplace l'horodatage reçu par l'heure locale (`at`, `receivedAt`). Sans ça, un décalage d'horloge entre deux appareils pouvait faire expirer un direct pourtant en cours (`LIVE_TTL`).
+
+
+---
+
+# RezMusic - Journal de Projet & Idées (v40)
+Date : 3 Novembre 2026
+Auteur de la version : Buffy (agent de code)
+
+## 174. Demande de l'utilisateur pour la v40
+- « Dans "comment obtenir la clé api youtube", que ce soit expliqué avec des images et qu'il y ait le lien cliquable de console.cloud.google.com. »
+
+## 175. Décision technique
+- L'app est livrée en **4 fichiers** : impossible d'ajouter des fichiers `.png` dans le zip. Les « captures » sont donc des **schémas SVG intégrés directement dans `index.html`** : rendu net à toutes les tailles, zéro requête réseau, zéro fichier en plus.
+
+## 176. Ce qui a été fait en v40
+1. **Lien cliquable** : `console.cloud.google.com` devient un lien dans l'étape 1, plus un bouton « Ouvrir console.cloud.google.com ↗ » qui pointe directement sur la fiche **YouTube Data API v3** (`/apis/library/youtube.googleapis.com`), ouvert dans un nouvel onglet (`rel="noopener noreferrer"`).
+2. **Quatre écrans illustrés** (`svg` inline, `viewBox 0 0 360 210`, `aria-label` sur chacun) :
+   - **Écran 1** : Bibliothèque Google Cloud, recherche « youtube data api v3 », bouton bleu **ACTIVER**.
+   - **Écran 2** : « Créer des identifiants » → menu avec **Clé API** surlignée.
+   - **Écran 3** : l'écran qui posait problème — restrictions d'API (« 1 API », puce « YouTube Data API v3 »), boutons radio « Aucun / Sites Web / Adresses IP » avec **Sites Web** coché, et le champ d'URI `https://rezmusic.vercel.app/*`.
+   - **Écran 4** : fenêtre « Clé API créée », clé masquée `AIzaSyD…7b3k`, icône de copie, rappel « Réglages › Recherche YouTube › Enregistrer ».
+3. Chaque étape de la liste renvoie maintenant à son écran (« c'est l'écran 2 », etc.), et chaque écran a une légende qui dit quoi cliquer.
+4. Ajout d'un rappel d'erreurs : « API key not valid » (clé mal copiée), « requests from referer are blocked » (adresse non déclarée), délai d'activation jusqu'à 5 minutes.
+5. CSS `.help-gallery` : une colonne sur téléphone, deux colonnes au-delà de 760 px ; images arrondies avec bordure discrète.
+
+## 177. Fichiers modifiés en v40
+- `index.html` : bloc `#youtube-help` réécrit (lien + 4 SVG + légendes), CSS `.help-link` / `.help-gallery` / `.help-inline-link`, version affichée v40.
+- `sw.js` : cache passé en `rezmusic-v40`.
+- `README.md` : mention de l'aide illustrée.
+- `saveia.txt` : cette section (v13 à v39 intactes, ajout seul).
+
+## 178. Vérifications faites en v40
+- `node --check` sur le script extrait : OK (aucun JavaScript n'a changé, mais contrôle systématique).
+- 4 balises `<svg` et 4 `<figcaption>` dans le bloc d'aide ; 2 liens vers `console.cloud.google.com` (`target="_blank"` + `rel="noopener noreferrer"`).
+- `id="youtube-help"` présent une seule fois ; un seul `<details>` d'aide YouTube.
+- Archive `rezmusic-v40.zip` (4 fichiers) testée (`testzip()` = None) et servie en HTTP 200.
+- **Non vérifié par l'agent** : rendu visuel des schémas sur téléphone (pas de navigateur ici).
+
+## 179. Idées suivantes (non faites)
+1. Même aide illustrée pour la création de l'application Spotify.
+2. Bouton « Tester la clé YouTube » affichant l'erreur exacte de Google.

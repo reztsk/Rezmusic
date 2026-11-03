@@ -1283,6 +1283,79 @@
     .nav-icon {
       font-size: 18px;
     }
+    /* Aide illustrée (clé YouTube) */
+    .help-inline-link {
+      color: #ff6b6b;
+      font-weight: 700;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+    .help-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin: 10px 0 2px;
+      padding: 10px 16px;
+      border-radius: 999px;
+      background: rgba(138, 180, 248, 0.14);
+      border: 1px solid rgba(138, 180, 248, 0.5);
+      color: #8ab4f8;
+      font-weight: 700;
+      font-size: 13px;
+      text-decoration: none;
+    }
+    .help-link:hover {
+      background: rgba(138, 180, 248, 0.26);
+    }
+    .help-gallery {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+      margin-top: 14px;
+    }
+    .help-gallery figure {
+      margin: 0;
+    }
+    .help-gallery svg {
+      display: block;
+      width: 100%;
+      height: auto;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .help-gallery figcaption {
+      margin-top: 7px;
+      font-size: 12px;
+      line-height: 1.45;
+      color: rgba(255, 255, 255, 0.6);
+    }
+    @media (min-width: 760px) {
+      .help-gallery { grid-template-columns: 1fr 1fr; }
+    }
+
+    /* Étoiles du lecteur (page d'accueil) */
+    .player-stars {
+      display: none;
+      justify-content: center;
+      gap: 6px;
+      margin: 8px 0 0;
+      font-size: 22px;
+      line-height: 1;
+      cursor: pointer;
+      user-select: none;
+    }
+    .player-stars span {
+      color: rgba(255, 255, 255, 0.28);
+      transition: color 0.15s ease, transform 0.15s ease;
+    }
+    .player-stars span.on {
+      color: #ffc107;
+      text-shadow: 0 0 10px rgba(255, 193, 7, 0.45);
+    }
+    .player-stars span:hover {
+      transform: scale(1.12);
+    }
+
     /* Lecteur YouTube */
     .youtube-embed {
       display: none;
@@ -1517,6 +1590,7 @@
       </div>
       <div class="player-title" id="current-track-title">Aucun titre sélectionné</div>
       <div class="player-artist" id="current-track-artist">Cherchez un morceau pour commencer</div>
+      <div id="player-stars" class="player-stars"></div>
       <div class="progress-row">
         <span id="time-current">0:00</span>
         <input class="progress" id="progress" type="range" min="0" max="100" value="0" step="0.1" aria-label="Progression">
@@ -1631,6 +1705,12 @@
       <button class="btn secondary" id="btn-join-session">Rejoindre</button>
     </div>
 
+    <div class="card">
+      <h2>Historique du groupe</h2>
+      <p>Les derniers sons écoutés par toi et tes amis, du plus récent au plus ancien.</p>
+      <div id="group-history"></div>
+    </div>
+
     <div class="card" id="session-panel" style="display: none;">
       <h2>En direct</h2>
       <div id="session-live"></div>
@@ -1725,6 +1805,8 @@
       <div id="other-ratings"></div>
       <div class="section-eyebrow" style="margin-top: 20px; margin-bottom: 12px;">Ses favoris</div>
       <div id="other-favorites"></div>
+      <div class="section-eyebrow" style="margin-top: 20px; margin-bottom: 12px;">Son historique</div>
+      <div id="other-history"></div>
     </div>
   </div>
 
@@ -1792,14 +1874,120 @@
       <input class="search-input" id="youtube-api-key" maxlength="80" placeholder="Clé API YouTube Data v3" autocomplete="off" spellcheck="false">
       <button class="mode-btn" id="btn-save-youtube-key" style="width: 100%; margin-top: 8px;">Enregistrer la clé YouTube</button>
       <div class="search-hint" id="youtube-key-state">Aucune clé enregistrée.</div>
-      <details class="help-box" style="margin-top: 12px;">
-        <summary>Comment obtenir cette clé (gratuit, 5 minutes)</summary>
+      <details class="help-box" id="youtube-help" style="margin-top: 12px;">
+        <summary>Comment obtenir cette clé (gratuit, 5 minutes) — avec les écrans</summary>
         <ol>
-          <li>Ouvre <em>console.cloud.google.com</em> et crée un projet.</li>
-          <li>« API et services » → « Bibliothèque » → active <strong>YouTube Data API v3</strong>.</li>
-          <li>« Identifiants » → « Créer des identifiants » → <strong>Clé API</strong>. Restreins-la à ton site (HTTP referrers).</li>
-          <li>Colle la clé ci-dessus. Quota gratuit : 10 000 unités par jour, environ 100 recherches.</li>
+          <li>Ouvre <a class="help-inline-link" href="https://console.cloud.google.com/" target="_blank" rel="noopener noreferrer">console.cloud.google.com</a> et crée un projet (nom libre, par exemple « RezMusic »).</li>
+          <li>« API et services » → « Bibliothèque » → active <strong>YouTube Data API v3</strong> (obligatoire : sans ça, l'API n'apparaît pas dans la liste des restrictions). C'est l'<strong>écran 1</strong>.</li>
+          <li>« Identifiants » → « Créer des identifiants » → <strong>Clé API</strong> (<strong>écran 2</strong>).</li>
+          <li><strong>Restrictions d'API</strong> : coche <strong>YouTube Data API v3</strong> (<strong>écran 3</strong>).</li>
+          <li><strong>Restrictions relatives aux applications</strong> : choisis <strong>Sites Web</strong>, puis ajoute <code>https://TON-SITE.vercel.app/*</code> et, pour tester en local, <code>http://localhost:3000/*</code>. Ne choisis pas « Adresses IP » : la clé est utilisée par le navigateur, pas par un serveur.</li>
+          <li>« Créer » → copie la clé → colle-la ci-dessus (<strong>écran 4</strong>). Quota gratuit : 10 000 unités par jour, environ 100 recherches.</li>
         </ol>
+
+        <a class="help-link" href="https://console.cloud.google.com/apis/library/youtube.googleapis.com" target="_blank" rel="noopener noreferrer">Ouvrir console.cloud.google.com ↗</a>
+
+        <div class="help-gallery">
+          <figure>
+            <svg viewBox="0 0 360 210" role="img" aria-label="Écran 1 : activer YouTube Data API v3 dans la bibliothèque">
+              <rect width="360" height="210" rx="10" fill="#202124"/>
+    <rect width="360" height="26" rx="10" fill="#2b2c30"/>
+    <rect y="16" width="360" height="10" fill="#2b2c30"/>
+    <circle cx="16" cy="13" r="3.4" fill="#5f6368"/>
+    <circle cx="28" cy="13" r="3.4" fill="#5f6368"/>
+    <circle cx="40" cy="13" r="3.4" fill="#5f6368"/>
+    <text x="56" y="17" fill="#9aa0a6" font-size="9" font-family="Arial, Helvetica, sans-serif">console.cloud.google.com</text>
+              <text x="16" y="46" fill="#e8eaed" font-size="11" font-weight="bold" font-family="Arial, Helvetica, sans-serif">API et services › Bibliothèque</text>
+              <rect x="16" y="56" width="328" height="24" rx="6" fill="#2b2c30" stroke="#3c4043"/>
+              <text x="26" y="72" fill="#bdc1c6" font-size="9" font-family="Arial, Helvetica, sans-serif">youtube data api v3</text>
+              <rect x="16" y="90" width="328" height="64" rx="8" fill="#292a2d" stroke="#3c4043"/>
+              <text x="28" y="111" fill="#e8eaed" font-size="10" font-weight="bold" font-family="Arial, Helvetica, sans-serif">YouTube Data API v3</text>
+              <text x="28" y="126" fill="#9aa0a6" font-size="8.5" font-family="Arial, Helvetica, sans-serif">Google · API de données</text>
+              <rect x="248" y="104" width="84" height="24" rx="12" fill="#8ab4f8"/>
+              <text x="290" y="120" fill="#202124" font-size="8.5" font-weight="bold" text-anchor="middle" font-family="Arial, Helvetica, sans-serif">ACTIVER</text>
+              <text x="28" y="145" fill="#81c995" font-size="8.5" font-family="Arial, Helvetica, sans-serif">✓ Activée</text>
+              <text x="16" y="186" fill="#fbbc04" font-size="9" font-weight="bold" font-family="Arial, Helvetica, sans-serif">1 — Active l'API avant de créer la clé</text>
+            </svg>
+            <figcaption><strong>Écran 1.</strong> Bibliothèque : tape « youtube data api v3 », ouvre la fiche et clique <strong>Activer</strong>. Sans cette étape, l'API n'apparaîtra pas à l'écran 3.</figcaption>
+          </figure>
+
+          <figure>
+            <svg viewBox="0 0 360 210" role="img" aria-label="Écran 2 : créer une clé API">
+              <rect width="360" height="210" rx="10" fill="#202124"/>
+    <rect width="360" height="26" rx="10" fill="#2b2c30"/>
+    <rect y="16" width="360" height="10" fill="#2b2c30"/>
+    <circle cx="16" cy="13" r="3.4" fill="#5f6368"/>
+    <circle cx="28" cy="13" r="3.4" fill="#5f6368"/>
+    <circle cx="40" cy="13" r="3.4" fill="#5f6368"/>
+    <text x="56" y="17" fill="#9aa0a6" font-size="9" font-family="Arial, Helvetica, sans-serif">console.cloud.google.com</text>
+              <text x="16" y="46" fill="#e8eaed" font-size="11" font-weight="bold" font-family="Arial, Helvetica, sans-serif">API et services › Identifiants</text>
+              <rect x="16" y="56" width="176" height="26" rx="13" fill="#8ab4f8"/>
+              <text x="104" y="73" fill="#202124" font-size="8.5" font-weight="bold" text-anchor="middle" font-family="Arial, Helvetica, sans-serif">+ CRÉER DES IDENTIFIANTS</text>
+              <rect x="16" y="92" width="196" height="92" rx="8" fill="#292a2d" stroke="#3c4043"/>
+              <rect x="22" y="98" width="184" height="24" rx="5" fill="#33415c"/>
+              <text x="32" y="114" fill="#8ab4f8" font-size="9" font-weight="bold" font-family="Arial, Helvetica, sans-serif">Clé API</text>
+              <text x="32" y="140" fill="#bdc1c6" font-size="9" font-family="Arial, Helvetica, sans-serif">ID client OAuth</text>
+              <text x="32" y="164" fill="#bdc1c6" font-size="9" font-family="Arial, Helvetica, sans-serif">Compte de service</text>
+              <text x="228" y="114" fill="#81c995" font-size="18" font-family="Arial, Helvetica, sans-serif">←</text>
+              <text x="16" y="200" fill="#fbbc04" font-size="9" font-weight="bold" font-family="Arial, Helvetica, sans-serif">2 — Choisis « Clé API », pas OAuth</text>
+            </svg>
+            <figcaption><strong>Écran 2.</strong> « Créer des identifiants » puis <strong>Clé API</strong>. Ne prends pas « ID client OAuth » : c'est réservé à la connexion Google.</figcaption>
+          </figure>
+
+          <figure>
+            <svg viewBox="0 0 360 210" role="img" aria-label="Écran 3 : restrictions d'API et sites web">
+              <rect width="360" height="210" rx="10" fill="#202124"/>
+    <rect width="360" height="26" rx="10" fill="#2b2c30"/>
+    <rect y="16" width="360" height="10" fill="#2b2c30"/>
+    <circle cx="16" cy="13" r="3.4" fill="#5f6368"/>
+    <circle cx="28" cy="13" r="3.4" fill="#5f6368"/>
+    <circle cx="40" cy="13" r="3.4" fill="#5f6368"/>
+    <text x="56" y="17" fill="#9aa0a6" font-size="9" font-family="Arial, Helvetica, sans-serif">console.cloud.google.com</text>
+              <text x="16" y="46" fill="#e8eaed" font-size="11" font-weight="bold" font-family="Arial, Helvetica, sans-serif">Créer une clé API</text>
+              <text x="16" y="64" fill="#9aa0a6" font-size="8.5" font-family="Arial, Helvetica, sans-serif">Sélectionner des restrictions d'API</text>
+              <rect x="16" y="70" width="328" height="24" rx="6" fill="#2b2c30" stroke="#8ab4f8"/>
+              <text x="26" y="86" fill="#e8eaed" font-size="9" font-family="Arial, Helvetica, sans-serif">1 API</text>
+              <rect x="16" y="100" width="212" height="22" rx="11" fill="#33415c"/>
+              <text x="28" y="115" fill="#8ab4f8" font-size="8.5" font-weight="bold" font-family="Arial, Helvetica, sans-serif">✓ YouTube Data API v3</text>
+              <line x1="16" y1="134" x2="344" y2="134" stroke="#3c4043"/>
+              <text x="16" y="150" fill="#9aa0a6" font-size="8.5" font-family="Arial, Helvetica, sans-serif">Restrictions relatives aux applications</text>
+              <circle cx="22" cy="164" r="4.2" fill="none" stroke="#9aa0a6"/>
+              <text x="32" y="167" fill="#bdc1c6" font-size="9" font-family="Arial, Helvetica, sans-serif">Aucun</text>
+              <circle cx="22" cy="182" r="4.2" fill="#8ab4f8"/>
+              <circle cx="22" cy="182" r="1.7" fill="#202124"/>
+              <text x="32" y="185" fill="#e8eaed" font-size="9" font-weight="bold" font-family="Arial, Helvetica, sans-serif">Sites Web</text>
+              <circle cx="22" cy="200" r="4.2" fill="none" stroke="#9aa0a6"/>
+              <text x="32" y="203" fill="#bdc1c6" font-size="9" font-family="Arial, Helvetica, sans-serif">Adresses IP</text>
+              <rect x="196" y="172" width="148" height="20" rx="5" fill="#202124" stroke="#3c4043"/>
+              <text x="203" y="186" fill="#8ab4f8" font-size="7.5" font-family="Arial, Helvetica, sans-serif">https://rezmusic.vercel.app/*</text>
+            </svg>
+            <figcaption><strong>Écran 3.</strong> Coche <strong>YouTube Data API v3</strong> dans les restrictions d'API, puis <strong>Sites Web</strong> (jamais « Aucun », jamais « Adresses IP ») et ajoute l'adresse de ton site.</figcaption>
+          </figure>
+
+          <figure>
+            <svg viewBox="0 0 360 210" role="img" aria-label="Écran 4 : copier la clé API">
+              <rect width="360" height="210" rx="10" fill="#202124"/>
+    <rect width="360" height="26" rx="10" fill="#2b2c30"/>
+    <rect y="16" width="360" height="10" fill="#2b2c30"/>
+    <circle cx="16" cy="13" r="3.4" fill="#5f6368"/>
+    <circle cx="28" cy="13" r="3.4" fill="#5f6368"/>
+    <circle cx="40" cy="13" r="3.4" fill="#5f6368"/>
+    <text x="56" y="17" fill="#9aa0a6" font-size="9" font-family="Arial, Helvetica, sans-serif">console.cloud.google.com</text>
+              <rect x="30" y="48" width="300" height="112" rx="10" fill="#292a2d" stroke="#3c4043"/>
+              <text x="46" y="72" fill="#e8eaed" font-size="11" font-weight="bold" font-family="Arial, Helvetica, sans-serif">Clé API créée</text>
+              <rect x="46" y="82" width="268" height="26" rx="6" fill="#202124" stroke="#3c4043"/>
+              <text x="56" y="99" fill="#81c995" font-size="9" font-family="Courier New, monospace">AIzaSyD…7b3k</text>
+              <rect x="288" y="88" width="11" height="13" rx="2" fill="none" stroke="#8ab4f8"/>
+              <rect x="292" y="84" width="11" height="13" rx="2" fill="none" stroke="#8ab4f8"/>
+              <text x="46" y="126" fill="#bdc1c6" font-size="8.5" font-family="Arial, Helvetica, sans-serif">Clique sur l'icône pour copier toute la clé</text>
+              <text x="46" y="146" fill="#8ab4f8" font-size="8.5" font-family="Arial, Helvetica, sans-serif">→ Réglages › Recherche YouTube › Enregistrer</text>
+              <text x="16" y="196" fill="#fbbc04" font-size="9" font-weight="bold" font-family="Arial, Helvetica, sans-serif">4 — Colle la clé dans RezMusic</text>
+            </svg>
+            <figcaption><strong>Écran 4.</strong> La clé s'affiche une seule fois en entier : copie-la avec l'icône, puis colle-la dans le champ au-dessus et clique <strong>Enregistrer la clé YouTube</strong>.</figcaption>
+          </figure>
+        </div>
+
+        <p class="search-hint" style="margin-top: 12px;">La restriction peut mettre jusqu'à 5 minutes à s'activer. Erreur « API key not valid » = clé mal copiée ; « requests from referer are blocked » = adresse du site différente de celle déclarée.</p>
       </details>
     </div>
 
@@ -1821,7 +2009,7 @@
 
     <div class="card">
       <h2>À propos de RezMusic</h2>
-      <p>Version v37 • Amis synchronisés entre appareils, notation 5 étoiles dans la recherche, audio de session ré-offert, test du Client ID, Connexion Spotify par page officielle en plein écran (jeton créé automatiquement), Choix Spotify ou YouTube, Client ID du tableau de bord accepté tel quel, Recherche et lecture YouTube sans Spotify (clé API gratuite), Partage du son en direct dans l'app, audio seul sans aucune image (WebRTC, l'invité écoute sans Spotify), bouton « Ouvrir ce titre dans mon Spotify » pour écouter à plusieurs sans Premium, connexion Spotify pour tous (e-mail et mot de passe, aucun compte développeur pour tes amis), aide intégrée, Client ID modifiable dans les Réglages, écran de lancement animé, compte Spotify lié à cet appareil (jamais partagé), sessions d'écoute à plusieurs (le code marche même sans compte Spotify), format PC et téléphone détecté automatiquement, paroles synchronisées, extraits 30 s optionnels, pochette carrée, néon rouge, playlists déroulantes, volume, historique des sons écoutés, profils avec code personnel et lecture complète Spotify (Premium requis).</p>
+      <p>Version v40 • Aide YouTube illustrée avec lien direct, direct même en YouTube, notes et historique des amis, historique du groupe, Notation 5 étoiles dans le lecteur de la page d'accueil, Amis synchronisés entre appareils, notation 5 étoiles dans la recherche, audio de session ré-offert, test du Client ID, Connexion Spotify par page officielle en plein écran (jeton créé automatiquement), Choix Spotify ou YouTube, Client ID du tableau de bord accepté tel quel, Recherche et lecture YouTube sans Spotify (clé API gratuite), Partage du son en direct dans l'app, audio seul sans aucune image (WebRTC, l'invité écoute sans Spotify), bouton « Ouvrir ce titre dans mon Spotify » pour écouter à plusieurs sans Premium, connexion Spotify pour tous (e-mail et mot de passe, aucun compte développeur pour tes amis), aide intégrée, Client ID modifiable dans les Réglages, écran de lancement animé, compte Spotify lié à cet appareil (jamais partagé), sessions d'écoute à plusieurs (le code marche même sans compte Spotify), format PC et téléphone détecté automatiquement, paroles synchronisées, extraits 30 s optionnels, pochette carrée, néon rouge, playlists déroulantes, volume, historique des sons écoutés, profils avec code personnel et lecture complète Spotify (Premium requis).</p>
     </div>
   </div>
 
@@ -2287,6 +2475,13 @@
       }).join('');
     }
 
+    document.getElementById('player-stars').addEventListener('click', function (event) {
+      var star = event.target.closest('[data-star]');
+      if (!star) return;
+      event.stopPropagation();
+      rateCurrentTrack(Number(star.getAttribute('data-star')));
+    });
+
     document.getElementById('search-results').addEventListener('click', function (event) {
       var stars = event.target.closest('.result-stars');
       if (!stars) return;
@@ -2347,6 +2542,10 @@
       renderLibrary();
       refreshProfileUi();
       document.querySelectorAll('.track-row[data-id="' + track.id + '"] .stars').forEach(updateStars);
+      renderPlayerStars();
+    renderGroupHistory();
+      renderOtherHistory(activeProfile());
+      announceProfile();
     }
 
     function updateStars(element) {
@@ -2426,14 +2625,22 @@
         emoji: profile.emoji,
         playing: !!playing,
         track: track ? {
+          id: track.id,
           title: track.title,
           artist: track.artist,
-          artwork: track.artwork || ''
+          artwork: track.artwork || '',
+          source: track.source || ''
         } : null,
         at: Date.now()
       };
 
       state.live[profile.code] = payload;
+
+      if (friendClient && friendClient.connected) {
+        try {
+          friendClient.publish('rezmusic/live/' + profile.code, JSON.stringify(payload));
+        } catch (error) { /* ignore */ }
+      }
 
       var stored = load(LIVE_KEY, {});
       stored[profile.code] = payload;
@@ -2452,7 +2659,12 @@
 
     function handleLivePayload(payload) {
       if (!payload || !payload.code) return;
-      state.live[payload.code] = payload;
+      var entry = {};
+      Object.keys(payload).forEach(function (key) { entry[key] = payload[key]; });
+      // L'horodatage de l'expéditeur peut être décalé : on garde le nôtre.
+      entry.at = Date.now();
+      entry.receivedAt = Date.now();
+      state.live[payload.code] = entry;
       renderLiveUi();
     }
 
@@ -2476,6 +2688,7 @@
       clearInterval(state.heartbeat);
       state.heartbeat = setInterval(function () {
         if (!audio.paused && audio.src) publishLive(true);
+        else if (state.playingVia === 'youtube' && ytPlayer && ytPlayer.getPlayerState && ytPlayer.getPlayerState() === 1) publishLive(true);
         renderLiveUi();
       }, HEARTBEAT_MS);
     }
@@ -2493,6 +2706,7 @@
       renderLiveNow();
       renderFriends();
       renderSelfStatus();
+      renderGroupHistory();
     }
 
     function renderLiveFeed() {
@@ -2662,10 +2876,41 @@
       return state.queue[state.index] || null;
     }
 
+    function renderPlayerStars() {
+      var box = document.getElementById('player-stars');
+      if (!box) return;
+      var track = currentTrack();
+      if (!track) {
+        box.innerHTML = '';
+        box.style.display = 'none';
+        return;
+      }
+      var value = ratingValue(track.id);
+      var html = '';
+      for (var i = 1; i <= 5; i++) {
+        html += '<span data-star="' + i + '" class="' + (i <= value ? 'on' : '') + '">' +
+          (i <= value ? '★' : '☆') + '</span>';
+      }
+      box.innerHTML = html;
+      box.style.display = 'flex';
+    }
+
+    function rateCurrentTrack(value) {
+      var track = currentTrack();
+      if (!track) {
+        toast("Lance d'abord un morceau pour le noter.");
+        return;
+      }
+      var current = ratingValue(track.id);
+      setRating(track, value === current ? 0 : value);
+      renderPlayerStars();
+    }
+
     function updatePlayerUi(track) {
       updateMiniPlayer(track);
       document.getElementById('current-track-title').textContent = track.title;
       document.getElementById('current-track-artist').textContent = track.artist;
+      renderPlayerStars();
       var art = document.getElementById('player-art');
       if (track.artwork) {
         art.src = track.artwork;
@@ -2864,6 +3109,8 @@
       saveDb();
       updateHistoryCount();
       if (state.libraryMode === 'history') renderLibrary();
+      renderGroupHistory();
+      announceProfile();
     }
 
     function historyTracks(profile) {
@@ -3014,7 +3261,7 @@
         return;
       }
 
-      var profile = profileByCode(clean);
+      var profile = profileByCode(clean) || remoteProfileShape(clean);
       var entry = liveEntry(clean);
 
       state.viewCode = clean;
@@ -3060,6 +3307,8 @@
           : '<div class="empty-state">' + escapeHtml(name) + ' n\'a encore noté aucun morceau.</div>';
       }
 
+      renderOtherHistory(profile);
+
       var favContainer = document.getElementById('other-favorites');
       if (!profile || !profile.favorites.length) {
         favContainer.innerHTML = '<div class="empty-state">Aucun favori visible pour ce profil.</div>';
@@ -3069,6 +3318,67 @@
             escapeHtml(track.title) + '</strong><span>' + escapeHtml(track.artist) + '</span></div></div>';
         }).join('');
       }
+    }
+
+    function renderOtherHistory(profile) {
+      var container = document.getElementById('other-history');
+      if (!container) return;
+      var list = (profile && profile.history) || [];
+      if (!list.length) {
+        container.innerHTML = '<div class="empty-state">Aucun son écouté visible pour ce profil.</div>';
+        return;
+      }
+      container.innerHTML = list.slice(0, 12).map(function (item) {
+        var when = item.playedAt ? new Date(item.playedAt) : null;
+        return '<div class="track-row"><div class="track-details"><strong>' + escapeHtml(item.title || '') +
+          '</strong><span>' + escapeHtml(item.artist || '') +
+          (when ? ' • ' + when.toLocaleDateString() + ' ' + when.toLocaleTimeString().slice(0, 5) : '') +
+          '</span></div></div>';
+      }).join('');
+    }
+
+    function renderGroupHistory() {
+      var container = document.getElementById('group-history');
+      if (!container) return;
+      var me = activeProfile();
+      var rows = [];
+      var seen = {};
+
+      function add(owner, emoji, items) {
+        (items || []).forEach(function (item) {
+          if (!item || !item.title) return;
+          var at = Number(item.playedAt || item.at || 0);
+          var key = String(item.id || item.title) + '|' + at;
+          if (seen[key]) return;
+          seen[key] = true;
+          rows.push({ owner: owner, emoji: emoji || '🎧', item: item, at: at });
+        });
+      }
+
+      (state.db.profiles || []).forEach(function (profile) {
+        add(profile.code === (me && me.code) ? 'Moi' : profile.name, profile.emoji, profile.history);
+      });
+      Object.keys(friendProfiles()).forEach(function (code) {
+        if (me && me.code === code) return;
+        var entry = friendProfiles()[code];
+        if (!entry) return;
+        add(entry.name || ('Profil ' + code), entry.emoji, entry.history);
+      });
+
+      rows.sort(function (a, b) { return b.at - a.at; });
+      if (!rows.length) {
+        container.innerHTML = '<div class="empty-state">Aucun son écouté pour le moment. Lance un morceau : il apparaîtra ici, et chez tes amis.</div>';
+        return;
+      }
+      container.innerHTML = rows.slice(0, 20).map(function (row) {
+        var when = row.at ? new Date(row.at) : null;
+        var badge = when ? when.toLocaleDateString() + ' ' + when.toLocaleTimeString().slice(0, 5) : '';
+        return '<div class="track-row"><div class="track-details"><strong>' + escapeHtml(row.item.title) +
+          '</strong><span>' + escapeHtml(row.emoji + ' ' + row.owner) +
+          (badge ? ' • ' + badge : '') +
+          (row.item.artist ? ' • ' + escapeHtml(row.item.artist) : '') +
+          '</span></div></div>';
+      }).join('');
     }
 
     function createProfile() {
@@ -5150,9 +5460,11 @@
       document.getElementById('visualizer').classList.toggle('playing', playing);
       document.getElementById('visualizer-state').textContent = playing ? 'En lecture' : 'En pause';
       document.getElementById('player-meta').textContent = playing ? 'En lecture • YouTube' : 'En pause • YouTube';
+      publishLive(playing);
       if (playing) {
         updateMiniPlayer(currentTrack());
         addToHistory(currentTrack());
+        announceProfile();
         if (session.isHost) publishSessionState();
         renderSessionUi();
       }
@@ -5215,6 +5527,19 @@
       return 'rezmusic/profile/' + code;
     }
 
+    function friendLiveTopic(code) {
+      return 'rezmusic/live/' + code;
+    }
+
+    function subscribeFriendTopics(client) {
+      var me = activeProfile();
+      if (!client || !me) return;
+      (me.friends || []).forEach(function (code) {
+        client.subscribe(friendTopic(code));
+        client.subscribe(friendLiveTopic(code));
+      });
+    }
+
     function friendProfiles() {
       if (!state.db.friendProfiles) state.db.friendProfiles = {};
       return state.db.friendProfiles;
@@ -5225,6 +5550,19 @@
       if (!entry) return null;
       if (Date.now() - (entry.at || 0) > 86400000) return null;
       return entry;
+    }
+
+    function remoteProfileShape(code) {
+      var entry = remoteProfile(code);
+      if (!entry) return null;
+      return {
+        code: code,
+        name: entry.name || ('Profil ' + code),
+        emoji: entry.emoji || '👤',
+        favorites: entry.favorites || [],
+        ratings: entry.ratings || {},
+        history: entry.history || []
+      };
     }
 
     function ensureFriendClient() {
@@ -5239,7 +5577,10 @@
         });
         client.on('connect', function () {
           var me = activeProfile();
-          if (me) client.subscribe(friendTopic(me.code));
+          if (me) {
+            client.subscribe(friendTopic(me.code));
+            subscribeFriendTopics(client);
+          }
           publishMyProfile(client);
         });
         client.on('message', function (topic, payload) {
@@ -5251,16 +5592,37 @@
       return friendConnecting;
     }
 
-    function publishMyProfile(client) {
+    function mySharedProfile() {
       var me = activeProfile();
-      if (!me || !client || !client.connected) return;
-      client.publish(friendTopic(me.code), JSON.stringify({
+      if (!me) return null;
+      var ratings = {};
+      Object.keys(me.ratings || {}).forEach(function (id) {
+        var entry = me.ratings[id];
+        if (!entry || !entry.value) return;
+        ratings[id] = {
+          value: Number(entry.value) || 0,
+          title: entry.title || '',
+          artist: entry.artist || '',
+          artwork: entry.artwork || '',
+          preview: entry.preview || '',
+          at: entry.at || 0
+        };
+      });
+      return {
         type: 'profile',
         code: me.code,
         name: me.name,
         emoji: me.emoji,
+        ratings: ratings,
+        history: (me.history || []).slice(0, 20),
         at: Date.now()
-      }));
+      };
+    }
+
+    function publishMyProfile(client) {
+      var payload = mySharedProfile();
+      if (!payload || !client || !client.connected) return;
+      client.publish(friendTopic(payload.code), JSON.stringify(payload));
     }
 
     function announceProfile() {
@@ -5276,6 +5638,8 @@
           return;
         }
         var me = activeProfile();
+        client.subscribe(friendTopic(code));
+        client.subscribe(friendLiveTopic(code));
         client.publish(friendTopic(code), JSON.stringify({
           type: 'who',
           from: me ? me.code : '',
@@ -5307,16 +5671,25 @@
         return;
       }
 
+      if (data.type === 'live' && data.code) {
+        handleLivePayload(data);
+        return;
+      }
+
       if (data.type === 'profile' && data.code) {
         friendProfiles()[data.code] = {
           name: data.name || ('Profil ' + data.code),
           emoji: data.emoji || '👤',
+          ratings: data.ratings || {},
+          history: data.history || [],
           at: Date.now()
         };
         saveDb();
         renderFriends();
         renderLiveFeed();
         renderLiveNow();
+        renderGroupHistory();
+        if (state.viewCode === data.code) openProfile(data.code);
         toast('Profil reçu : ' + friendProfiles()[data.code].name);
       }
     }
@@ -6027,6 +6400,7 @@
     renderRedirectUriHelp();
     renderYoutubeUi();
     renderSourceChoice();
+    renderPlayerStars();
     setTimeout(announceProfile, 1500);
     renderPlaylists();
     restoreSpotifySession();
