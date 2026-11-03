@@ -1,0 +1,500 @@
+# RezMusic - Journal de Projet & Idées (v13)
+Date : 2 Novembre 2026
+
+## ⚠️ État d'avancement important
+Correction d'un problème d'affichage sur la visionneuse web/sandbox. Restauration d'un code HTML 100% robuste, visible, propre, intégrant la barre de recherche et le lecteur direct, tout en conservant exactement l'interface visuelle v1 d'origine (cartes sombres, visualiseur, onglets en bas Accueil, Musique, Communauté, Réglages).
+
+---
+
+## 1. Vision et Objectifs du Projet
+- **Nom du projet** : RezMusic
+- **Concept** : Application web musicale collaborative 100 % gratuite, sans abonnements payants et sans publicité obligatoire pour les amis.
+- **Design & Interface (v13)** : Interface visuelle v1 exacte restaurée avec un affichage web sans bug de visibilité.
+
+---
+
+## 2. Fonctionnalités Intégrées (v13)
+1. **Interface visuelle v1 exacte & visible** : Code épuré et entièrement fonctionnel pour éviter tout écran noir ou vide.
+2. **Barre de recherche & Lecteur direct** : Prêt pour l'intégration de l'API Spotify sur PC.
+3. **Barre de navigation en bas** : Accueil, Musique, Communauté, Réglages.
+4. **Feed en direct & Notes sur 5**.
+
+---
+
+# RezMusic - Journal de Projet & Idées (v14)
+Date : 3 Novembre 2026
+Auteur de la version : Buffy (agent de code)
+
+## 3. Ce qui a été repris du dossier fourni
+Fichiers reçus : `index.html` (v13), `LISEZ-MOI.txt`, `saveia.txt`, `sw.js`.
+Constat sur la v13 : l'interface était bien celle de la v1 (cartes sombres, visualiseur, 4 onglets), mais **aucune fonction n'était réelle**.
+- `togglePlay()` affichait une alerte « la lecture sera active dès que l'API Spotify sera configurée ».
+- `handleSearch()` affichait une alerte.
+- `connectSpotify()` affichait une alerte.
+- Pas de sauvegarde, pas de recherche, pas de son, pas de mode hors-ligne réel.
+
+## 4. Décision technique importante : pourquoi Spotify ne peut pas être 100 % gratuit
+L'API Spotify est gratuite pour la recherche et les métadonnées, **mais la lecture audio complète depuis un site exige un compte Spotify Premium** (Web Playback SDK), et l'application doit gérer un Client ID + une URI de redirection.
+Comme l'objectif du projet est « 100 % gratuit, sans abonnement, sans publicité obligatoire pour les amis », la lecture a été basée sur des **extraits libres de 30 secondes** fournis par le catalogue public iTunes/Apple Music, accessibles **sans clé API et sans compte**.
+Spotify reste proposé en option dans les Réglages, avec l'explication honnête de sa limite. Aucune promesse de lecture complète gratuite n'est faite.
+
+## 5. Fonctionnalités réellement fonctionnelles (v14)
+1. **Recherche musicale réelle** : API publique iTunes appélée en JSONP (`https://itunes.apple.com/search`), sans clé, sans compte, sans serveur. Titres, artistes, pochettes et extraits de 30 s.
+2. **Lecteur audio** : lecture / pause, titre suivant / précédent, barre de progression cliquable, temps écoulé et durée, enchaînement automatique.
+3. **Visualiseur** : les barres s'animent uniquement pendant la lecture (animation décorative permanente supprimée).
+4. **Favoris (♥)** enregistrés dans le navigateur (`localStorage`), visibles dans l'onglet Musique.
+5. **Notes sur 5 (★)** enregistrées localement, avec possibilité de retirer une note.
+6. **Bibliothèque** : trois vues (Favoris, Notes, Derniers résultats).
+7. **Fil « En direct »** alimenté par un bouton de partage de l'écoute.
+8. **Code de session Juke-box** généré une fois et copiable.
+9. **Mode hors-ligne** : service worker réécrit (réseau d'abord, cache de secours).
+10. **Interface v1 conservée à l'identique** : mêmes variables CSS, mêmes cartes, mêmes onglets, même barre de navigation.
+
+## 6. Fichiers produits en v14
+- `index.html` : application complète (HTML + CSS + JS, aucune dépendance externe, aucune librairie).
+- `sw.js` : service worker hors-ligne.
+- `README.md` : état du projet, hébergement gratuit, limites connues.
+- `saveia.txt` : ce journal.
+
+## 7. Vérifications faites en v14
+- Syntaxe JavaScript contrôlée avec `node --check` : OK.
+- Serveur local lancé sur `0.0.0.0:3000` (python http.server).
+- `index.html` et `sw.js` répondent HTTP 200, y compris avec l'en-tête du nom de domaine de prévisualisation.
+- Test visuel et test du son restant à confirmer par le propriétaire du projet (pas d'automatisation navigateur disponible côté agent).
+
+## 8. Limites connues de la v14
+- Les extraits viennent d'iTunes : certains morceaux n'ont pas d'extrait et sont marqués « extrait indisponible ».
+- Les favoris et notes sont locaux à un navigateur.
+- La synchronisation entre plusieurs appareils (juke-box réel) demande un petit backend.
+
+---
+
+# RezMusic - Journal de Projet & Idées (v15)
+Date : 3 Novembre 2026
+Auteur de la version : Buffy (agent de code)
+
+## 9. Demande de l'utilisateur pour la v15
+1. Noter chaque nouvelle version dans ce fichier `saveia`, en ajout seul, sans jamais rien supprimer depuis le début.
+2. Ajouter un **bouton « Profil » en haut** de l'application.
+3. Ce bouton ouvre une **page dédiée à chacun des profils existants**.
+4. Chaque profil possède un **code personnel** permettant de **s'ajouter entre amis** dans l'application.
+5. Pouvoir **voir qui écoute quoi en direct** quand la personne écoute de la musique.
+6. Pouvoir **voir sur le profil d'un ami les notes qu'il a données** à tel et tel son, sur 5.
+
+## 10. Ce qui a été implémenté (v15)
+1. **Bouton Profil en haut à droite** : pastille avec l'avatar et le pseudo du profil actif. Il ouvre l'onglet Profils. La barre du bas reste à 4 onglets (Accueil, Musique, Communauté, Réglages), comme l'interface d'origine.
+2. **Gestion multi-profils sur l'appareil** : création de plusieurs profils (pseudo + avatar emoji), liste des autres profils, bascule d'un profil à l'autre en un appui. Chaque profil garde ses propres favoris, ses propres notes et son propre code.
+3. **Code personnel unique par profil** : format `XXXX-XXXX` (8 caractères, sans caractères ambigus). Bouton « Copier mon code » et bouton « Partager mon lien de profil » (lien `#ami=CODE`).
+4. **Ajout d'ami par code** : champ dédié, validation du format, refus du doublon et du code personnel, ajout immédiat à la liste d'amis. Un lien reçu avec `#ami=CODE` pré-remplit automatiquement le champ.
+5. **Page de profil pour chaque personne** : avatar, pseudo, code, statut d'écoute, notes sur 5 (avec le titre et l'artiste), et favoris. Bouton « Ajouter à mes amis » sur un profil consulté.
+6. **Statut « en direct »** : quand un profil lance un morceau, son statut passe en « live » avec le titre et l'artiste. Le fil de l'Accueil et la section « En direct maintenant » du profil affichent « qui écoute quoi ».
+7. **Synchronisation temps réel locale** : `BroadcastChannel` + `localStorage` + battement de cœur toutes les 45 s. Ouvrez le site dans deux onglets (ou deux fenêtres) avec deux profils différents : vous verrez réellement l'un écouter ce que l'autre joue, avec expiration du statut après 2 minutes sans signal.
+8. **Migration des données v14** : les favoris et les notes déjà enregistrés sont automatiquement importés dans le premier profil créé, rien n'est perdu.
+9. **Réinitialisation** : efface tous les profils, favoris, notes, codes et statuts du navigateur, après confirmation.
+10. **Version affichée dans les Réglages** : v15.
+
+## 11. Fichiers modifiés en v15
+- `index.html` : ajout de l'onglet Profils, du bouton Profil, de la base de profils, du système de codes, du direct et des notes par profil.
+- `sw.js` : cache passé en `rezmusic-v15`.
+- `saveia.txt` : ajout des sections v14 et v15, sans suppression du contenu v13.
+- `README.md` : mise à jour de l'état réel et des limites.
+
+## 12. Point technique honnête sur le « direct » entre amis
+Le direct fonctionne **réellement et gratuitement** :
+- entre plusieurs onglets / fenêtres du même navigateur (BroadcastChannel) ;
+- après rechargement (état conservé dans `localStorage`, avec expiration après 2 minutes).
+
+Pour voir un ami **sur un autre téléphone**, il faut un petit serveur de synchronisation. C'est la seule brique qui n'existe pas encore et elle est identifiée comme l'étape suivante. Options gratuites possibles : Cloudflare Workers + Durable Objects, Supabase (offre gratuite), Firebase (offre Spark). Aucune clé n'est encore configurée, donc rien n'est facturé et rien n'est envoyé sur Internet.
+Conséquence actuelle, affichée clairement dans l'application : un code d'ami ajouté depuis un autre appareil reste « en attente de synchronisation » jusqu'à la mise en place de ce serveur.
+
+## 13. Vérifications faites en v15
+- Contrôle de syntaxe JavaScript avec `node --check` : voir résultat ci-dessous.
+- Serveur statique relancé / fichiers servis en HTTP 200.
+- Test à faire par l'utilisateur : ouvrir deux onglets, créer un second profil, copier son code, revenir au premier profil, ajouter le code en ami, lancer un morceau dans un onglet et vérifier que l'autre profil apparaît « live » avec le bon titre.
+
+## 14. Idées suivantes (non faites, pour ne rien oublier)
+1. Serveur de synchronisation gratuit pour le direct entre téléphones et les notes partagées.
+2. Juke-box réel : file d'attente commune, ajout de morceaux par les amis, vote.
+3. Historique d'écoute par profil et statistiques (top artistes, top titres).
+4. Photo de profil (avatar image) en plus des emojis.
+5. Export / import des données d'un profil (fichier JSON) pour changer d'appareil sans serveur.
+6. Mode clair / sombre commutable.
+7. Notifications quand un ami lance un morceau.
+
+---
+
+# RezMusic - Journal de Projet & Idées (v16)
+Date : 3 Novembre 2026
+Auteur de la version : Buffy (agent de code)
+
+## 15. Demande de l'utilisateur pour la v16
+1. « Pourquoi la recherche de son ne fonctionne plus ? »
+2. « Quand on cherche un son, j'aimerais que au fur et à mesure que j'écris les recherches apparaissent, au lieu de devoir taper tout le son en entier. »
+3. « Dans l'historique, qu'il apparaisse les sons seulement écoutés et pas recherchés. »
+4. « Que l'application prenne la couleur de la pochette en arrière-plan du lecteur pour rendre cela plus immersif. »
+
+## 16. Diagnostic réel du problème de recherche
+Vérification directe depuis le serveur :
+- `https://itunes.apple.com/search?term=daft%20punk...&callback=rezCb1` → **HTTP 200**, contenu JSONP correct (`rezCb1(...)`).
+- `https://api.deezer.com/search?q=daft%20punk&output=jsonp&callback=rezCb2` → **HTTP 200**, contenu JSONP correct.
+
+Conclusion : les catalogues ne sont pas en panne. La recherche cassait côté navigateur pour l'une de ces raisons :
+1. Requête JSONP bloquée par une règle de sécurité de la page (CSP) dans la prévisualisation.
+2. Limitation temporaire de l'API iTunes sur l'adresse IP (réponse 403), qui renvoyait une erreur silencieuse.
+3. Erreur réseau affichée comme « aucun résultat », donc incompréhensible pour l'utilisateur.
+
+## 17. Corrections apportées (v16)
+1. **Double catalogue avec bascule automatique** : iTunes d'abord, puis **Deezer** si iTunes échoue ou ne renvoie rien. Les identifiants Deezer sont préfixés `dz` pour ne pas entrer en collision avec ceux d'iTunes.
+2. **Messages d'erreur utiles** : plus de faux « aucun résultat ». En cas d'échec, l'application affiche la cause, un bouton **Réessayer**, et détecte la CSP (`securitypolicyviolation`) pour expliquer que la prévisualisation bloque les appels externes et qu'il faut héberger le site.
+3. **Anti-résultats périmés** : compteur de requête (`searchToken`), une réponse lente ne peut plus écraser une recherche plus récente.
+4. **Doublons supprimés** dans les résultats (`cleanResults`).
+
+## 18. Recherche instantanée
+- Recherche lancée **pendant la frappe**, sans appuyer sur Entrée : délai de 320 ms après la dernière touche (anti-rebond).
+- Minimum 2 caractères, avec un message « Encore 1 caractère… » en dessous.
+- La touche Entrée reste disponible pour forcer la recherche immédiate.
+- Résultats conservés à l'écran pendant la frappe suivante, pour éviter le clignotement.
+- Effacer le champ vide les résultats.
+
+## 19. Historique = sons réellement écoutés
+- Nouvelle liste par profil : 50 sons maximum, dédoublonnés, du plus récent au plus ancien.
+- Un son n'entre dans l'historique **que lorsque la lecture démarre réellement** (événement `play` de l'audio), jamais sur une simple recherche.
+- La carte « Derniers résultats » a été remplacée par « **⏱ Historique** » avec le compteur de sons écoutés.
+- Un son de l'historique est rejouable d'un appui, avec ses notes toujours visibles.
+- L'historique est propre à chaque profil et survit au rechargement de la page.
+
+## 20. Lecteur immersif aux couleurs de la pochette
+- **Fond flou de la pochette** derrière le lecteur : couche dédiée, `blur(26px)`, saturation augmentée, opacité 0,6, transition douce (fonctionne même si l'image vient d'un autre domaine).
+- **Couleur dominante extraite** de la pochette via un canvas 12×12 (moyenne des pixels), utilisée comme accent : barre de progression, barres du visualiseur pendant la lecture, halo (`box-shadow`) autour du lecteur.
+- **Secours** : si l'image bloque la lecture des pixels (CORS), une couleur stable est calculée à partir de l'identifiant du morceau, donc l'interface reste colorée et cohérente.
+- Le fond revient à l'état neutre quand aucun morceau n'est sélectionné ou après réinitialisation.
+
+## 21. Fichiers modifiés en v16
+- `index.html` : recherche multi-catalogues + instantanée, historique d'écoute, lecteur immersif, version affichée v16.
+- `sw.js` : cache passé en `rezmusic-v16`.
+- `saveia.txt` : ajout de cette section v16, sans suppression des sections v13, v14 et v15.
+- `README.md` : mise à jour.
+
+## 22. Vérifications prévues en v16
+- Syntaxe JavaScript contrôlée avec `node --check`.
+- Contrôle que chaque fonction appelée possède bien une définition (le bug `updateHistoryCount` manquant a été détecté puis corrigé pendant cette version).
+- Fichiers servis en HTTP 200.
+- Test à faire par l'utilisateur : taper 3 lettres et voir les résultats apparaître seuls, écouter un son, vérifier qu'il apparaît dans l'historique, et vérifier que le lecteur prend les couleurs de la pochette.
+
+## 23. Idées suivantes (non faites)
+1. Serveur de synchronisation gratuit pour le direct entre téléphones.
+2. Juke-box réel partagé.
+3. Recherche dans Deezer ET iTunes simultanément puis fusion des résultats (aujourd'hui : bascule automatique seulement).
+4. Bouton « tout effacer » uniquement pour l'historique.
+5. Mode clair / sombre.
+
+---
+
+# RezMusic - Journal de Projet & Idées (v17)
+Date : 3 Novembre 2026
+Auteur de la version : Buffy (agent de code)
+
+## 24. Demande de l'utilisateur pour la v17
+1. « Pourquoi quand je clique sur une musique j'ai seulement un extrait ? Je veux cliquer et que ça me la lance ici, et pouvoir changer de morceau quand je veux. »
+2. « Pouvoir l'ajouter à une playlist quand je veux. »
+3. « Garder la fonctionnalité d'extrait, mais qu'on choisisse ou non de la lancer : ça permet de voir rapidement si c'est le son qu'on cherche. »
+4. « J'ai une API Spotify développeur pour avoir accès à mes playlists si je veux les transférer. »
+5. « Une fois l'application finie, redonne-moi un .zip final pour en faire un dépôt GitHub et héberger sur Vercel, utilisable sur téléphone comme sur PC. »
+6. « Retire le logo R en haut, laisse juste RezMusic d'écrit. »
+
+## 25. La vérité technique sur la lecture complète (à retenir)
+Aucune API légale et gratuite ne fournit la lecture **complète** d'un titre commercial depuis un site web :
+- iTunes et Deezer ne donnent que des extraits de 30 s (c'est une limite de leurs API, pas de RezMusic).
+- Spotify autorise la lecture complète **uniquement** avec un compte **Premium**, via le Web Playback SDK.
+- Une application Spotify en **mode développement** est limitée à **25 utilisateurs** qui doivent être ajoutés à la main dans le tableau de bord.
+- L'API Spotify ne demande **pas** de secret client si on utilise la méthode PKCE (recommandée pour un site statique). Le secret affiché dans le tableau de bord ne doit jamais être mis dans le code.
+
+## 26. Ce qui a été implémenté (v17)
+1. **Choix du mode de lecture** (Réglages) : « ▶ Extrait 30 s » (par défaut, marche partout, gratuit) ou « ♪ Lecture complète » (Spotify, Premium requis).
+2. **Bouton « 30 » sur chaque résultat de recherche** : lance toujours l'extrait, quel que soit le mode. On vérifie donc rapidement qu'on a le bon son sans lancer la lecture complète.
+3. **Bouton « ＋ Playlist »** sur chaque résultat et dans le lecteur : feuille de sélection pour ajouter à une playlist existante ou en créer une immédiatement.
+4. **Playlists complètes** : création, nom, lecture (« Lire »), ouverture, suppression, retrait d'un morceau, ajout depuis la recherche, les favoris, l'historique ou le lecteur. Tout est enregistré par profil.
+5. **Connexion Spotify (OAuth PKCE)** avec le client ID fourni par l'utilisateur (`3a9cd…a7b3`), sans aucun secret dans le code. Connexion, déconnexion, rafraîchissement automatique du jeton.
+6. **Import des playlists Spotify** : liste des playlists du compte, bouton « Importer » qui copie titres, artistes, pochettes, durées et URI Spotify dans une playlist RezMusic.
+7. **Lecture complète via le Web Playback SDK** : si le compte est Premium, le morceau se lance dans l'application ; sinon message clair « Compte Spotify Premium requis » et bascule automatique sur l'extrait 30 s quand il existe.
+8. **Recherche Spotify automatique** : pour un titre venu d'iTunes/Deezer, RezMusic retrouve l'URI Spotify correspendant au moment de la lecture complète.
+9. **Logo « R » supprimé** en haut : il ne reste que le texte RezMusic (demande explicite).
+10. **Jeton Spotify stocké dans `localStorage`** (clé `rezmusic.spotify.v1`) pour rester connecté après rechargement. Aucun secret client n'est stocké.
+11. **URI de redirection** calculée automatiquement : `origin + chemin`, ce qui donne `https://rezmusicv13.vercel.app/` une fois déployé sur Vercel — identique à ce qui est déclaré dans le tableau de bord Spotify.
+
+## 27. Fichiers modifiés en v17
+- `index.html` : mode de lecture, boutons 30 s et ＋, playlists, Spotify OAuth PKCE + SDK, import de playlists, logo retiré.
+- `sw.js` : cache passé en `rezmusic-v17`.
+- `saveia.txt` : ajout de cette section, sans rien supprimer des v13/v14/v15/v16.
+- `README.md` : mise à jour.
+- `rezmusic-v17.zip` : archive finale prête pour GitHub et Vercel.
+
+## 28. Vérifications faites en v17
+- Syntaxe JavaScript contrôlée avec `node --check` : OK.
+- Contrôle automatique des identifiants d'éléments : aucun manquant, aucun doublon.
+- Contrôle des fonctions appelées : toutes déclarées.
+- Logo « R » : bien absent du HTML.
+- `index.html` (113 069 octets) servi en HTTP 200.
+
+## 29. Limites honnêtes de la v17
+- **Impossible de tester la connexion Spotify réelle ici** : cela demande un compte Premium et l'URI de redirection autorisée. Le code est écrit selon la documentation officielle PKCE + Web Playback SDK, mais non validé en conditions réelles.
+- L'événement `account_error` du SDK indique un compte non Premium : l'app le traduit par un message clair et retombe sur l'extrait.
+- Le SDK Spotify ne fonctionne pas dans Safari iOS : la lecture complète y sera refusée, l'extrait reste disponible.
+- En mode développement Spotify, seuls 25 comptes ajoutés dans le tableau de bord pourront se connecter.
+
+## 30. Livraison finale
+Archive `rezmusic-v17.zip` contenant `index.html`, `sw.js`, `saveia.txt`, `README.md`.
+Utilisation : créer un dépôt GitHub, y déposer les fichiers, puis importer le dépôt dans Vercel (site statique, aucune variable d'environnement). L'application est responsive (mobile + PC) et fonctionne hors-ligne après la première visite.
+
+## 31. Idées suivantes (non faites)
+1. Serveur de synchronisation gratuit pour le direct et les notes entre téléphones.
+2. Juke-box réel partagé avec file d'attente commune.
+3. Fusion iTunes + Deezer dans une seule liste de résultats.
+4. Bouton « vider l'historique ».
+5. Photo de profil personnalisée (image) en plus des emojis.
+6. Mode clair / sombre.
+
+---
+
+# RezMusic - Journal de Projet & Idées (v18)
+Date : 3 Novembre 2026
+Auteur de la version : Buffy (agent de code)
+
+## 32. Demande de l'utilisateur pour la v18
+1. « Pourquoi il n'y a encore que 30 secondes ? Je veux les sons en entier du début à la fin, comme une application de musique. »
+2. « Dans la recherche, fais en sorte qu'on puisse mettre pause quand on veut. »
+3. « Si j'ai créé une clé API Spotify développeur, c'est pour avoir accès à tout le catalogue et écouter les morceaux en entier. »
+4. « Donne-moi déjà la possibilité de relier vraiment mon compte Spotify pour que je puisse tester. »
+
+## 33. La règle technique à retenir (définitive)
+Le **client ID / la clé développeur Spotify ne donne pas la lecture complète**. Il donne l'accès au catalogue (recherche, métadonnées, playlists, pochettes) via l'API Web. Pour écouter un titre en entier, Spotify exige :
+- un **compte Spotify Premium** (compte gratuit = 30 s maximum, partout, y compris dans les lecteurs intégrés Spotify) ;
+- et le **Web Playback SDK** (lecteur intégré) ou un appareil Spotify actif.
+Ce n'est pas une limite de RezMusic, c'est une règle de Spotify. La seule alternative gratuite serait un service non officiel, écarté (illégal et instable).
+
+## 34. Ce qui a été ajouté en v18
+1. **Recherche directe dans le catalogue Spotify** quand le compte est connecté et que le mode « Lecture complète » est actif : chaque résultat possède alors son identifiant Spotify, donc la lecture complète est immédiate.
+2. **Mini-lecteur flottant** visible sur tous les onglets (au-dessus de la barre du bas) : pochette, titre, artiste, bouton pause/lecture et suivant. On peut donc mettre pause à tout moment, même en pleine recherche.
+3. **Lecteur Spotify intégré (iframe officielle)** : si le SDK ne peut pas démarrer (Safari iOS, DRM, appareil indisponible), l'app affiche le lecteur Spotify officiel du morceau pour ne pas rester bloquée.
+4. **Panneau de diagnostic Spotify** dans les Réglages : bouton « Tester la connexion Spotify » qui affiche le client ID, l'**URI de redirection exacte** à déclarer dans le tableau de bord, la présence du jeton, le **nom du compte**, l'**abonnement (premium/free)** et les **appareils Spotify** disponibles.
+5. **Messages d'erreur détaillés** au lieu de messages génériques.
+6. Le mode de lecture reste au choix, et le bouton **30** reste disponible pour un test rapide d'un son.
+
+## 35. Comment tester la connexion Spotify (procédure exacte)
+1. Ouvrir RezMusic à l'adresse de déploiement (idéalement `https://rezmusicv13.vercel.app/`).
+2. Tableau de bord Spotify → *Edit settings* → **Redirect URI** : doit être **strictement** l'adresse affichée par RezMusic dans le diagnostic (même slash final, pas de paramètre).
+3. Dans RezMusic : Réglages → **Connecter Spotify** → accepter.
+4. Revenir dans Réglages → **Tester la connexion Spotify** :
+   - si « Abonnement : free » s'affiche, la lecture complète est **impossible** tant que le compte n'est pas Premium (c'est écrit dans le diagnostic) ;
+   - si « Abonnement : premium », lancer un morceau en mode « Lecture complète ».
+5. En mode développement, seuls **25 comptes** ajoutés manuellement dans le tableau de bord peuvent se connecter.
+
+## 36. Fichiers modifiés en v18
+- `index.html` : mini-lecteur, recherche Spotify, embed officiel, diagnostic, messages d'erreur.
+- `sw.js` : cache passé en `rezmusic-v18`.
+- `saveia.txt` : ajout de cette section (v13 à v17 intactes).
+- `README.md` : mise à jour.
+
+## 37. Vérifications faites en v18
+- Syntaxe JavaScript : `node --check` OK.
+- Identifiants d'éléments : aucun manquant, aucun doublon.
+- Fonctions appelées : toutes déclarées.
+- Fichiers servis en HTTP 200.
+- **Connexion Spotify réelle non testable ici** : aucun compte Premium disponible côté agent. À valider par l'utilisateur avec le diagnostic intégré.
+
+## 38. Idées suivantes (non faites)
+1. Serveur de synchronisation gratuit pour les sessions entre téléphones.
+2. Juke-box partagé avec file d'attente commune.
+3. Fusion iTunes + Deezer + Spotify dans une seule liste de résultats.
+4. Téléchargement hors-ligne autorisé par Spotify (limité).
+5. Mode clair / sombre.
+
+---
+
+# RezMusic - Journal de Projet & Idées (v19)
+Date : 3 Novembre 2026
+Auteur de la version : Buffy (agent de code)
+
+## 39. Problème signalé par l'utilisateur
+En cliquant sur « Connecter Spotify », la page affiche : **« accounts.spotify.com n'autorise pas la connexion »** (page vide avec une icône de document), dans la prévisualisation intégrée (URL `pv-…style.dev`).
+
+## 40. Cause réelle (expliquée simplement)
+Deux choses se cumulent :
+1. **Spotify interdit d'être affiché dans un cadre (iframe)** — règles `X-Frame-Options` / `frame-ancestors`. La prévisualisation de l'éditeur est un cadre : Spotify refuse donc de s'y ouvrir. Ça ne vient pas du code.
+2. **L'URI de redirection** doit être strictement celle déclarée dans le tableau de bord Spotify. Dans la prévisualisation, l'adresse est `pv-…style.dev` : elle n'est pas déclarée, donc Spotify refuserait aussi de rediriger (erreur `redirect_uri`). L'adresse déclarée est `https://rezmusicv13.vercel.app/`.
+
+Conclusion : **la connexion Spotify doit se tester sur le site déployé (Vercel), dans un onglet normal**, pas dans la prévisualisation.
+
+## 41. Corrections apportées en v19
+1. **Détection du cadre** (`window.self !== window.top`) : un encart explicatif s'affiche dans les Réglages avec un bouton **« Ouvrir RezMusic dans un onglet »**.
+2. **Blocage propre** : si on clique sur « Connecter Spotify » depuis un cadre, l'app explique le problème au lieu d'ouvrir une page blanche.
+3. **Connexion par fenêtre pop-up** (`window.open`) au lieu de quitter l'application : la fenêtre Spotify se ferme après autorisation, puis prévient l'application (`postMessage`) qui recharge le jeton. Si la pop-up est bloquée, repli sur la navigation classique.
+4. **Ligne « Contexte » dans le diagnostic** : indique si on est en prévisualisation intégrée ou en onglet complet.
+5. Le diagnostic affiche toujours l'**URI de redirection exacte** à copier dans le tableau de bord Spotify.
+
+## 42. Récapitulatif complet des demandes de l'utilisateur, version par version
+- **v14** : reprendre le projet RezMusic existant (fichiers v13 + saveia), le rendre entièrement gratuit et fonctionnel (recherche, lecture).
+- **v15** : noter chaque version dans `saveia` en ajout seul ; bouton Profil en haut ; page dédiée à chaque profil ; code personnel pour s'ajouter entre amis ; voir qui écoute quoi en direct ; voir les notes sur 5 données par chaque profil.
+- **v16** : réparer la recherche ; recherche instantanée pendant la frappe ; historique limité aux sons réellement écoutés ; fond du lecteur aux couleurs de la pochette.
+- **v17** : lecture complète et non plus 30 s ; playlists ; garder l'extrait mais au choix ; connexion à l'API Spotify développeur pour récupérer les playlists ; zip final pour GitHub + Vercel ; retirer le logo « R ».
+- **v18** : insistance sur la lecture intégrale de A à Z ; pause possible pendant la recherche ; accès à tout le catalogue Spotify ; connexion Spotify réellement testable.
+- **v19** : la connexion échoue dans la prévisualisation → corriger et fournir le zip complet + tout le journal.
+
+## 43. Livraison v19
+- `rezmusic-v19.zip` : `index.html`, `sw.js`, `README.md`, `saveia.txt`.
+- Journal complet conservé : v13, v14, v15, v16, v17, v18 et v19 (aucune suppression).
+
+## 44. Ce qu'il reste à faire pour que Spotify fonctionne chez l'utilisateur
+1. Déployer le zip sur Vercel (ou ouvrir le site déployé existant) : `https://rezmusicv13.vercel.app/`.
+2. Vérifier dans le tableau de bord Spotify que la Redirect URI est exactement `https://rezmusicv13.vercel.app/`.
+3. Ouvrir le site dans un **onglet normal** (pas dans la prévisualisation).
+4. Réglages → Connecter Spotify → accepter → Tester la connexion Spotify.
+5. Lire la ligne **Abonnement** : `premium` = lecture complète possible ; `free` = Spotify limite à 30 s, aucune solution gratuite et légale n'existe.
+
+## 45. Vérifications faites en v19
+- Syntaxe JavaScript : `node --check` OK.
+- Identifiants d'éléments : aucun manquant, aucun doublon.
+- Fonctions : toutes déclarées.
+- Fichiers et zip servis en HTTP 200.
+- Connexion Spotify réelle : **non testable côté agent** (aucun compte Premium, aucune URI autorisée pour cet environnement). À valider par l'utilisateur après déploiement.
+
+---
+
+# RezMusic - Journal de Projet & Idées (v20)
+Date : 3 Novembre 2026
+Auteur de la version : Buffy (agent de code)
+
+## 46. Problème signalé par l'utilisateur
+En cliquant sur « Connecter Spotify », la fenêtre Spotify affiche **`client_id: Invalid`** — alors que la connexion fonctionnait dans d'anciennes versions et que l'URI de redirection a bien été mise à jour (`https://rezmusicv19.vercel.app/`).
+
+## 47. Cause trouvée (vérifiée)
+Le Client ID présent dans le code fait **29 caractères** :
+`3a9cd2cd1d445e693501c9e29a7b3` → 29 caractères.
+Or un **Client ID Spotify fait exactement 32 caractères hexadécimaux**. L'identifiant a donc été tronqué lors d'un copier-coller (ou à la recopie depuis une capture d'écran), et Spotify répond logiquement `client_id: Invalid`.
+Ce n'est ni l'URI de redirection, ni le mode développement, ni le code OAuth : uniquement la valeur de l'identifiant.
+
+## 48. Corrections apportées en v20
+1. **Client ID modifiable dans l'application** : nouveau champ « Client ID Spotify » dans les Réglages, avec bouton **Enregistrer le Client ID**. La valeur est stockée dans le navigateur (par profil utilisateur), sans jamais toucher au code.
+2. **Validation stricte** : l'application refuse un identifiant qui ne fait pas exactement 32 caractères hexadécimaux, et affiche la longueur reçue pour comprendre l'erreur.
+3. **Blocage avant l'erreur Spotify** : si l'identifiant est invalide, « Connecter Spotify » explique le problème au lieu d'ouvrir une page Spotify en erreur.
+4. **Diagnostic enrichi** : affiche le Client ID utilisé, sa **longueur**, sa **validité**, l'URI de redirection et **l'URL de la page actuelle** (pour repérer immédiatement un mauvais domaine, par exemple v13 au lieu de v19).
+5. Le champ est pré-rempli avec la valeur enregistrée, modifiable à tout moment sans redéployer.
+
+## 49. Procédure exacte pour l'utilisateur
+1. Dans le tableau de bord Spotify → *Informations de base* → **ID client** → bouton **copier** (ne pas le retaper à la main).
+2. Dans RezMusic → Réglages → coller dans **Client ID Spotify** → **Enregistrer le Client ID**.
+3. Vérifier dans le diagnostic que la ligne affiche bien **« 32 caractères, valide »**.
+4. Vérifier que l'URI de redirection affichée correspond exactement à celle du tableau de bord (`https://rezmusicv19.vercel.app/`).
+5. Ouvrir le site dans un onglet normal (pas la prévisualisation, qui est bloquée par Spotify), puis **Connecter Spotify** → **Tester la connexion Spotify**.
+
+## 50. Fichiers modifiés en v20
+- `index.html` : champ Client ID + validation + diagnostic détaillé + garde-fou avant connexion.
+- `sw.js` : cache passé en `rezmusic-v20`.
+- `README.md` : section « client_id: Invalid ».
+- `saveia.txt` : cette section (v13 à v19 intactes).
+
+## 51. Vérifications faites en v20
+- Syntaxe JavaScript : `node --check` OK.
+- Identifiants d'éléments : aucun manquant, aucun doublon.
+- Fonctions : toutes déclarées.
+- Archive `rezmusic-v20.zip` recréée et testée.
+- Connexion Spotify réelle : à valider par l'utilisateur avec son vrai Client ID 32 caractères.
+
+---
+
+# RezMusic - Journal de Projet & Idées (v21)
+Date : 3 Novembre 2026
+Auteur de la version : Buffy (agent de code)
+
+## 52. Demandes de l'utilisateur pour la v21
+1. La connexion Spotify fonctionne, mais **les playlists importées trouvent 0 son**.
+2. Ses **amis** veulent aussi connecter leur compte Spotify : comment faire ?
+3. Cacher le « token développeur » dans un **menu secret avec mot de passe**.
+4. Pouvoir se connecter en **cliquant juste sur « Connexion avec Spotify »**, sans que personne n'ait à toucher à l'API, et que **toutes les playlists et tous leurs sons** remontent.
+
+## 53. Cause réelle du « 0 son » (vérifiée dans la documentation Spotify)
+Spotify a changé son API en **février 2026** :
+- `GET /playlists/{id}/tracks` → **supprimé**, remplacé par `GET /playlists/{id}/items` (l'ancien chemin répond 403).
+- `playlist.tracks.total` → **`playlist.items.total`**.
+- Dans chaque ligne, `row.track` (objet) → **`row.item`**.
+- Piège majeur : **`row.track` existe toujours, mais c'est devenu un booléen `true`**. Un lecteur tolérant croit donc que la playlist est vide — c'est exactement ce qui se passait.
+- Autre changement : `limit` de recherche plafonné à **10** (au lieu de 50), et le champ `product` (abonnement) a été **retiré** des réponses utilisateur.
+
+## 54. Corrections apportées en v21
+1. **Import via `/items`** avec repli automatique sur `/tracks` (ancien format) si besoin.
+2. **Lecture de `row.item` en priorité**, avec vérification que c'est bien un objet (le booléen est ignoré).
+3. **Pagination complète par 100** : une playlist de 300 titres est importée en entier, pas seulement les 100 premiers.
+4. **Compteur de titres corrigé** (`items.total` puis `tracks.total`), avec le vrai nom de la playlist importée au lieu de « Spotify • date ».
+5. **Recherche Spotify à 10 résultats** (nouvelle limite officielle).
+6. **Diagnostic adapté** : le champ abonnement n'existe plus côté Spotify, l'app l'indique clairement au lieu d'afficher « undefined ».
+
+## 55. Connexion pour les amis
+- Un seul bouton : **Se connecter avec Spotify**. Chaque personne autorise son propre compte, rien à configurer, le Client ID est commun à l'application.
+- **Le Client ID n'est pas un secret** : il est public par conception (OAuth PKCE). Le *client secret* Spotify, lui, ne doit jamais être mis dans le site.
+- **Limite Spotify en mode développement : 5 comptes maximum** (réduite depuis 25 en février 2026), à ajouter à la main dans *User Management* du tableau de bord. Au-delà : demande d'extension de quota (250 000 utilisateurs actifs exigés). L'app ne peut pas contourner cette limite, c'est une règle côté Spotify.
+
+## 56. Menu secret avec mot de passe
+- Accès : Réglages → **« Réglages développeur (privé) »**, ou URL terminée par `#admin`.
+- Premier accès : l'utilisateur choisit un mot de passe (4 caractères minimum), stocké **haché en SHA-256** dans le navigateur.
+- Le menu contient : le Client ID, le bouton d'enregistrement, le bouton de test et le diagnostic.
+- **Honnêteté** : ce n'est pas une sécurité réelle, juste une séparation visuelle. Le code de l'app est public, et le mot de passe n'est qu'une serrure locale. Aucun secret Spotify n'est stocké dans l'application.
+
+## 57. Fichiers modifiés en v21
+- `index.html` : import `/items` + pagination + `row.item`, menu privé à mot de passe, diagnostic adapté, libellé « Se connecter avec Spotify ».
+- `sw.js` : cache passé en `rezmusic-v21`.
+- `README.md` : tableau des renommages Spotify et limites de comptes.
+- `saveia.txt` : cette section (v13 à v20 intactes).
+
+## 58. Vérifications faites en v21
+- Syntaxe JavaScript : `node --check` OK.
+- Identifiants d'éléments : aucun manquant, aucun doublon.
+- Fonctions : toutes déclarées.
+- Archive `rezmusic-v21.zip` recréée et testée.
+- Import réel des playlists : à confirmer par l'utilisateur avec son compte (l'agent n'a pas de compte Spotify Premium).
+
+## 59. Idées suivantes (non faites)
+1. Synchronisation temps réel entre téléphones (backend gratuit).
+2. Import incrémental (ne pas dupliquer une playlist déjà importée).
+3. Lecture complète sans compte Premium : impossible légalement, restera hors périmètre.
+4. Mode clair / sombre.
+
+---
+
+# RezMusic - Journal de Projet & Idées (v22)
+Date : 3 Novembre 2026
+Auteur de la version : Buffy (agent de code)
+
+## 60. Demandes de l'utilisateur pour la v22
+1. Le son se lance bien, mais **la barre affiche 0:30 et n'avance pas** pendant la lecture.
+2. Il veut **cliquer sur un résultat** et que ça lance la musique.
+3. Il veut **en bas** une barre avec **stop/pause, suivant et précédent**.
+
+## 61. Cause du 0:30 figé
+Depuis la v18, la lecture complète passe par **Spotify**, pas par le lecteur audio de la page. L'élément `<audio>` n'est donc jamais sollicité : son événement `timeupdate` ne se déclenche pas, et la durée restait la valeur par défaut (0:30). Ce n'était pas un bug du son, seulement de l'affichage.
+
+## 62. Corrections apportées en v22
+1. **Barre synchronisée avec Spotify** : écoute de `player_state_changed` + **rafraîchissement toutes les 700 ms** de `getCurrentState()` pour que la barre avance en continu.
+2. **Durée réelle du morceau** affichée (plus de 0:30 impose), position courante mise à jour, bouton qui bascule lecture/pause selon l'état réel.
+3. **Clic sur la barre pour se déplacer** dans le morceau (équivalent de `seek` côté Spotify).
+4. **Toute la ligne de résultat est cliquable** : un appui lance le morceau (avant, seul le petit bouton ▶ le faisait).
+5. **Barre du bas complète** : ⏮ précédent, ▶/❚❚ lecture/pause, ⏭ suivant, visible sur tous les onglets.
+6. Le titre, l'artiste et la pochette du lecteur se mettent aussi à jour depuis l'état Spotify (changement de morceau automatique).
+
+## 63. Fichiers modifiés en v22
+- `index.html` : synchronisation de la barre, clic sur les résultats, bouton précédent dans la barre du bas.
+- `sw.js` : cache passé en `rezmusic-v22`.
+- `README.md` : description de la barre synchronisée.
+- `saveia.txt` : cette section (v13 à v21 intactes).
+
+## 64. Vérifications faites en v22
+- Syntaxe JavaScript : `node --check` OK.
+- Identifiants d'éléments : aucun manquant, aucun doublon.
+- Fonctions : toutes déclarées (`handleSpotifyState`, `startSpotifyTicker`, `stopSpotifyTicker`).
+- Archive `rezmusic-v22.zip` recréée et testée.
+- Synchronisation réelle de la barre : à confirmer visuellement par l'utilisateur avec un compte Premium.
+
+## 65. Idées suivantes (non faites)
+1. Synchronisation temps réel entre téléphones (backend gratuit).
+2. Import incrémental des playlists (éviter les doublons).
+3. File d'attente visuelle modifiable.
+4. Mode clair / sombre.

@@ -1,0 +1,3769 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0d0d0d">
+  <title>RezMusic</title>
+  <style>
+    :root {
+      --bg: #0d0d0d;
+      --card-bg: #161618;
+      --card-border: rgba(255, 255, 255, 0.08);
+      --text-main: #ffffff;
+      --text-secondary: #8e8e93;
+      --spotify-green: #1db954;
+      --star-color: #ffc107;
+      --live-badge: #ff453a;
+    }
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text-main);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      padding: 16px;
+      max-width: 500px;
+      margin-left: auto;
+      margin-right: auto;
+      padding-bottom: 110px;
+    }
+
+    /* Header */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+      gap: 10px;
+    }
+    .logo-badge {
+      background: var(--card-bg);
+      color: var(--text-main);
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      font-weight: bold;
+      font-size: 15px;
+      border: 1px solid var(--card-border);
+      flex-shrink: 0;
+    }
+    .brand-title {
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: -0.3px;
+    }
+    .profile-chip {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 999px;
+      padding: 4px 12px 4px 4px;
+      color: var(--text-main);
+      font-family: inherit;
+      font-size: 12px;
+      cursor: pointer;
+      max-width: 160px;
+    }
+    .profile-chip:hover {
+      background: #202024;
+    }
+    .profile-chip-avatar {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: #202024;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+    .profile-chip-name {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* Tabs System */
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+
+    /* Typography helpers matching v1 */
+    .section-eyebrow {
+      font-size: 11px;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 4px;
+      font-weight: 500;
+    }
+    .section-heading {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      letter-spacing: -0.5px;
+    }
+    .section-subtitle {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    /* Cards */
+    .card {
+      background: var(--card-bg);
+      padding: 18px;
+      border-radius: 16px;
+      margin-bottom: 16px;
+      border: 1px solid var(--card-border);
+    }
+    .card h2 {
+      font-size: 15px;
+      margin-top: 0;
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+    .card p {
+      color: var(--text-secondary);
+      font-size: 12px;
+      margin-bottom: 12px;
+      line-height: 1.4;
+    }
+
+    /* Search Bar */
+    .search-container {
+      margin-bottom: 16px;
+    }
+    .search-input {
+      width: 100%;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      padding: 12px 16px;
+      border-radius: 14px;
+      color: var(--text-main);
+      font-size: 14px;
+      outline: none;
+      font-family: inherit;
+    }
+    .search-input::placeholder {
+      color: var(--text-secondary);
+    }
+    .search-hint {
+      font-size: 11px;
+      color: var(--text-secondary);
+      margin-bottom: 12px;
+      min-height: 14px;
+    }
+    .card .search-input {
+      margin-bottom: 10px;
+    }
+
+    /* Search results */
+    .result-row {
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--card-bg);
+      padding: 10px;
+      border-radius: 14px;
+      margin-bottom: 8px;
+      border: 1px solid var(--card-border);
+    }
+    .result-row.playing {
+      border-color: rgba(29, 185, 84, 0.6);
+    }
+    .result-art {
+      width: 46px;
+      height: 46px;
+      border-radius: 10px;
+      object-fit: cover;
+      background: #202024;
+      flex-shrink: 0;
+    }
+    .result-info {
+      min-width: 0;
+      flex: 1;
+    }
+    .result-info strong {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .result-info span {
+      display: block;
+      font-size: 11px;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-top: 2px;
+    }
+    .result-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+    .icon-btn {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 16px;
+      cursor: pointer;
+      padding: 6px;
+      line-height: 1;
+      font-family: inherit;
+    }
+    .icon-btn.active {
+      color: var(--live-badge);
+    }
+    .icon-btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    /* Player Card */
+    .player-card {
+      position: relative;
+      overflow: hidden;
+      isolation: isolate;
+      background: var(--card-bg);
+      padding: 18px;
+      border-radius: 16px;
+      margin-bottom: 16px;
+      border: 1px solid var(--card-border);
+      transition: box-shadow 0.5s ease;
+      box-shadow: 0 18px 50px -26px rgba(0, 0, 0, 0.9);
+    }
+    .player-card.immersive {
+      box-shadow: 0 22px 60px -22px var(--accent, rgba(29, 185, 84, 0.55));
+    }
+    .player-bg {
+      position: absolute;
+      inset: -25%;
+      background-size: cover;
+      background-position: center;
+      filter: blur(26px) saturate(1.7);
+      opacity: 0;
+      transition: opacity 0.6s ease;
+      z-index: 0;
+      pointer-events: none;
+    }
+    .player-bg.visible {
+      opacity: 0.6;
+    }
+    .player-card::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(13, 13, 13, 0.3), rgba(13, 13, 13, 0.88));
+      z-index: 0;
+      pointer-events: none;
+    }
+    .player-inner {
+      position: relative;
+      z-index: 1;
+    }
+    .player-meta {
+      font-size: 11px;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 10px;
+    }
+    .player-art {
+      display: none;
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      max-height: 220px;
+      object-fit: cover;
+      border-radius: 14px;
+      background: #202024;
+      margin-bottom: 14px;
+    }
+    .player-art.visible {
+      display: block;
+    }
+    .player-title {
+      font-weight: 600;
+      font-size: 18px;
+      margin-bottom: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .player-artist {
+      color: var(--text-secondary);
+      font-size: 13px;
+      margin-bottom: 14px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .progress-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 10px;
+      color: var(--text-secondary);
+      margin-bottom: 14px;
+    }
+    .progress {
+      accent-color: var(--accent, #ffffff);
+      flex: 1;
+      height: 4px;
+      -webkit-appearance: none;
+      appearance: none;
+      background: #2a2a2e;
+      border-radius: 2px;
+      outline: none;
+      cursor: pointer;
+    }
+    .progress::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #ffffff;
+      cursor: pointer;
+    }
+    .progress::-moz-range-thumb {
+      width: 10px;
+      height: 10px;
+      border: none;
+      border-radius: 50%;
+      background: #ffffff;
+      cursor: pointer;
+    }
+    .player-controls {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 32px;
+      font-size: 18px;
+      color: var(--text-secondary);
+    }
+    .player-controls span {
+      cursor: pointer;
+      user-select: none;
+    }
+    .play-btn-circle {
+      background: #ffffff;
+      color: #000000;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    /* Visualizer Card */
+    .visualizer-card {
+      background: var(--card-bg);
+      padding: 18px;
+      border-radius: 16px;
+      margin-bottom: 16px;
+      border: 1px solid var(--card-border);
+    }
+    .visualizer-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .visualizer-title {
+      font-size: 14px;
+      font-weight: 500;
+    }
+    .visualizer-sub {
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+    .visualizer-bars {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      height: 45px;
+      margin: 8px 0;
+    }
+    .v-bar {
+      width: 3px;
+      background: var(--text-secondary);
+      border-radius: 2px;
+      animation: sound 1.2s infinite ease-in-out;
+      animation-play-state: paused;
+    }
+    .visualizer-card.playing .v-bar {
+      animation-play-state: running;
+    }
+    .v-bar:nth-child(1) { height: 15px; animation-delay: 0.1s; }
+    .v-bar:nth-child(2) { height: 30px; animation-delay: 0.3s; }
+    .v-bar:nth-child(3) { height: 42px; animation-delay: 0.2s; }
+    .v-bar:nth-child(4) { height: 24px; animation-delay: 0.4s; }
+    .v-bar:nth-child(5) { height: 36px; animation-delay: 0.15s; }
+    .v-bar:nth-child(6) { height: 20px; animation-delay: 0.25s; }
+    @keyframes sound {
+      0%, 100% { transform: scaleY(0.5); opacity: 0.5; }
+      50% { transform: scaleY(1.2); opacity: 1; background: var(--accent, #ffffff); }
+    }
+    .visualizer-footer {
+      font-size: 10px;
+      color: var(--text-secondary);
+      text-align: center;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      margin-top: 10px;
+    }
+
+    /* Playlists Grid */
+    .playlists-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .playlist-box {
+      background: var(--card-bg);
+      padding: 16px;
+      border-radius: 16px;
+      border: 1px solid var(--card-border);
+      cursor: pointer;
+      transition: background 0.2s;
+      text-align: left;
+      color: inherit;
+      font-family: inherit;
+    }
+    .playlist-box:hover {
+      background: #202024;
+    }
+    .playlist-box strong {
+      font-size: 14px;
+      display: block;
+      margin-bottom: 4px;
+      font-weight: 600;
+    }
+    .playlist-box span {
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+
+    /* Live Feed Card */
+    .live-feed-card {
+      background: var(--card-bg);
+      border-left: 3px solid var(--live-badge);
+      padding: 16px;
+      border-radius: 16px;
+      margin-bottom: 16px;
+      border: 1px solid var(--card-border);
+    }
+    .live-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 8px;
+      gap: 10px;
+    }
+    .live-user {
+      font-size: 13px;
+      font-weight: 600;
+      color: #fff;
+    }
+    .live-track {
+      font-size: 11px;
+      color: var(--text-secondary);
+      margin-top: 2px;
+    }
+    .live-dot {
+      width: 7px;
+      height: 7px;
+      background-color: var(--live-badge);
+      border-radius: 50%;
+      display: inline-block;
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+      0% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(1.2); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+
+    /* Track Row & Ratings */
+    .track-row.playable {
+      cursor: pointer;
+    }
+    .track-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--card-bg);
+      padding: 14px 16px;
+      border-radius: 14px;
+      margin-bottom: 10px;
+      border: 1px solid var(--card-border);
+      gap: 10px;
+    }
+    .track-details {
+      min-width: 0;
+      flex: 1;
+    }
+    .track-details strong {
+      font-size: 14px;
+      display: block;
+      font-weight: 500;
+      margin-bottom: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .track-details span {
+      font-size: 11px;
+      color: var(--text-secondary);
+      display: block;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .stars {
+      color: var(--text-secondary);
+      font-size: 13px;
+      cursor: pointer;
+      letter-spacing: 1px;
+      flex-shrink: 0;
+      user-select: none;
+    }
+    .stars .on {
+      color: var(--star-color);
+    }
+    .empty-state {
+      font-size: 12px;
+      color: var(--text-secondary);
+      background: var(--card-bg);
+      border: 1px dashed var(--card-border);
+      border-radius: 14px;
+      padding: 16px;
+      line-height: 1.5;
+      margin-bottom: 12px;
+    }
+
+    /* Buttons */
+    .btn {
+      border: none;
+      padding: 12px 20px;
+      border-radius: 20px;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      text-decoration: none;
+      background-color: var(--spotify-green);
+      color: #000;
+      transition: background 0.2s;
+      font-family: inherit;
+    }
+    .btn:hover {
+      background-color: #1ed760;
+    }
+    .btn.secondary {
+      background: #202024;
+      color: var(--text-main);
+      border: 1px solid var(--card-border);
+      margin-top: 10px;
+    }
+    .btn.secondary:hover {
+      background: #2a2a2e;
+    }
+
+    /* Session code */
+    .session-code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 22px;
+      letter-spacing: 4px;
+      font-weight: 700;
+      text-align: center;
+      background: #202024;
+      border: 1px dashed var(--card-border);
+      border-radius: 12px;
+      padding: 14px;
+      margin: 10px 0;
+    }
+
+    /* Profils */
+    .profile-hero {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    .avatar {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: #202024;
+      border: 1px solid var(--card-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      flex-shrink: 0;
+    }
+    .profile-name {
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: -0.3px;
+    }
+    .profile-sub {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-top: 3px;
+      line-height: 1.35;
+    }
+    .profile-sub.live {
+      color: var(--live-badge);
+      font-weight: 600;
+    }
+    .emoji-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .emoji-btn {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      border: 1px solid var(--card-border);
+      background: #202024;
+      font-size: 16px;
+      cursor: pointer;
+      color: var(--text-main);
+      font-family: inherit;
+      line-height: 1;
+    }
+    .emoji-btn.selected {
+      border-color: var(--spotify-green);
+      background: rgba(29, 185, 84, 0.15);
+    }
+    .person-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 12px;
+      margin-bottom: 8px;
+      width: 100%;
+      text-align: left;
+      color: inherit;
+      font-family: inherit;
+      cursor: pointer;
+    }
+    .person-row:hover {
+      background: #202024;
+    }
+    .person-avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: #202024;
+      border: 1px solid var(--card-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+    .person-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .person-name {
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .person-sub {
+      font-size: 11px;
+      color: var(--text-secondary);
+      margin-top: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .live-pill {
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--live-badge);
+      font-weight: 700;
+      border: 1px solid rgba(255, 69, 58, 0.4);
+      padding: 3px 7px;
+      border-radius: 999px;
+      flex-shrink: 0;
+    }
+    .mini-stars {
+      font-size: 12px;
+      letter-spacing: 1px;
+      color: var(--text-secondary);
+      flex-shrink: 0;
+    }
+    .mini-stars .on {
+      color: var(--star-color);
+    }
+    .back-link {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      font-family: inherit;
+      font-size: 12px;
+      padding: 0;
+      margin-bottom: 14px;
+      cursor: pointer;
+    }
+    .code-inline {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 12px;
+      letter-spacing: 1px;
+      color: var(--text-main);
+      background: #202024;
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 3px 7px;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 96px;
+      transform: translate(-50%, 20px);
+      background: #202024;
+      border: 1px solid var(--card-border);
+      color: var(--text-main);
+      font-size: 12px;
+      padding: 10px 16px;
+      border-radius: 999px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s, transform 0.2s;
+      z-index: 2000;
+      max-width: 90%;
+      text-align: center;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+
+    .link-btn {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      font-family: inherit;
+      font-size: 11px;
+      text-decoration: underline;
+      cursor: pointer;
+      padding: 12px 0 0;
+      display: block;
+    }
+
+    /* Player actions */
+    .player-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 16px;
+    }
+    .chip-btn {
+      flex: 1;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--card-border);
+      color: var(--text-main);
+      font-family: inherit;
+      font-size: 11px;
+      padding: 9px 10px;
+      border-radius: 999px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .chip-btn:hover {
+      background: rgba(255, 255, 255, 0.14);
+    }
+    .mode-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .mode-btn {
+      flex: 1;
+      padding: 11px 8px;
+      border-radius: 12px;
+      border: 1px solid var(--card-border);
+      background: #202024;
+      color: var(--text-main);
+      font-family: inherit;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .mode-btn.active {
+      border-color: var(--spotify-green);
+      background: rgba(29, 185, 84, 0.16);
+    }
+    .sheet {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.65);
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+      z-index: 3000;
+      padding: 12px;
+    }
+    .sheet.open {
+      display: flex;
+    }
+    .sheet-card {
+      background: #161618;
+      border: 1px solid var(--card-border);
+      border-radius: 18px;
+      padding: 16px;
+      width: 100%;
+      max-width: 480px;
+      max-height: 80vh;
+      overflow: auto;
+    }
+    .sheet-title {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    .notice {
+      font-size: 12px;
+      line-height: 1.5;
+      color: var(--text-main);
+      background: rgba(255, 69, 58, 0.12);
+      border: 1px solid rgba(255, 69, 58, 0.4);
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+
+    /* Mini lecteur flottant */
+    .mini-player {
+      position: fixed;
+      left: 50%;
+      bottom: 76px;
+      transform: translateX(-50%);
+      width: calc(100% - 24px);
+      max-width: 476px;
+      display: none;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 10px;
+      background: rgba(22, 22, 24, 0.96);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      z-index: 1200;
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      box-shadow: 0 10px 30px -12px rgba(0, 0, 0, 0.9);
+    }
+    .mini-player.show {
+      display: flex;
+    }
+    .mini-art {
+      width: 38px;
+      height: 38px;
+      border-radius: 8px;
+      object-fit: cover;
+      background: #202024;
+      flex-shrink: 0;
+    }
+    .mini-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .mini-title {
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .mini-artist {
+      font-size: 10px;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .mini-btn {
+      background: none;
+      border: none;
+      color: var(--text-main);
+      font-size: 16px;
+      cursor: pointer;
+      padding: 6px;
+      font-family: inherit;
+    }
+    .mini-btn.play {
+      background: #ffffff;
+      color: #000000;
+      border-radius: 50%;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+    }
+    .spotify-embed {
+      display: none;
+      margin: 12px 0 4px;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .spotify-embed iframe {
+      width: 100%;
+      height: 152px;
+      border: 0;
+      display: block;
+    }
+    .diag {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 10px;
+      line-height: 1.5;
+      color: var(--text-secondary);
+      white-space: pre-wrap;
+      word-break: break-word;
+      background: #202024;
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 10px;
+      margin: 10px 0 0;
+    }
+
+    /* Bottom Navigation Bar */
+    .nav-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(13, 13, 13, 0.95);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      justify-content: space-around;
+      padding: 8px 0 22px 0;
+      z-index: 1000;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+    .nav-item {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+      flex: 1;
+      font-family: inherit;
+    }
+    .nav-item.active {
+      color: var(--text-main);
+      font-weight: 600;
+    }
+    .nav-icon {
+      font-size: 18px;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <div class="brand-title">RezMusic</div>
+    </div>
+    <button class="profile-chip" id="btn-profile" title="Mon profil">
+      <span class="profile-chip-avatar" id="chip-avatar">🎧</span>
+      <span class="profile-chip-name" id="chip-name">Profil</span>
+    </button>
+  </header>
+
+  <!-- TAB 1 : ACCUEIL -->
+  <div id="tab-accueil" class="tab-content active">
+    <div class="section-eyebrow">Votre espace musical</div>
+    <div class="section-heading" id="greeting">Bonsoir.</div>
+
+    <!-- Barre de recherche intégrée -->
+    <div class="search-container">
+      <input type="text" class="search-input" placeholder="Rechercher un son ou un artiste..." id="search-bar" autocomplete="off">
+      <div class="search-hint" id="search-hint">Appuyez sur Entrée pour rechercher un titre.</div>
+    </div>
+    <div id="search-results"></div>
+
+    <!-- Lecteur principal -->
+    <div class="player-card" id="player-card">
+      <div class="player-bg" id="player-bg" aria-hidden="true"></div>
+      <div class="player-inner">
+      <div class="player-meta" id="player-meta">Prêt à lire</div>
+      <img class="player-art" id="player-art" alt="">
+      <div class="spotify-embed" id="spotify-embed">
+        <iframe id="spotify-embed-frame" title="Lecteur Spotify" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+      </div>
+      <div class="player-title" id="current-track-title">Aucun titre sélectionné</div>
+      <div class="player-artist" id="current-track-artist">Cherchez un morceau pour commencer</div>
+      <div class="progress-row">
+        <span id="time-current">0:00</span>
+        <input class="progress" id="progress" type="range" min="0" max="100" value="0" step="0.1" aria-label="Progression">
+        <span id="time-total">0:00</span>
+      </div>
+      <div class="player-controls">
+        <span id="btn-prev" title="Précédent">⏮</span>
+        <div class="play-btn-circle" id="btn-play" title="Lecture / Pause">▶</div>
+        <span id="btn-next" title="Suivant">⏭</span>
+      </div>
+      <div class="player-actions">
+        <button class="chip-btn" id="btn-preview">▶ Extrait 30 s</button>
+        <button class="chip-btn" id="btn-add-playlist">＋ Playlist</button>
+      </div>
+      </div>
+    </div>
+
+    <!-- Visualiseur -->
+    <div class="visualizer-card" id="visualizer">
+      <div class="visualizer-header">
+        <span class="visualizer-title">Visualiseur</span>
+        <span class="visualizer-sub" id="visualizer-state">En pause</span>
+      </div>
+      <div class="visualizer-bars">
+        <div class="v-bar"></div>
+        <div class="v-bar"></div>
+        <div class="v-bar"></div>
+        <div class="v-bar"></div>
+        <div class="v-bar"></div>
+        <div class="v-bar"></div>
+      </div>
+      <div class="visualizer-footer">Extraits 30 s • 100 % gratuit</div>
+    </div>
+
+    <!-- Feed en Direct -->
+    <div class="live-feed-card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+        <span style="font-size: 11px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.8px;"><span class="live-dot"></span> En direct du groupe</span>
+        <span style="font-size: 10px; color: var(--live-badge); font-weight: bold;">LIVE</span>
+      </div>
+      <div id="live-feed"></div>
+    </div>
+  </div>
+
+  <!-- TAB 2 : MUSIQUE -->
+  <div id="tab-musique" class="tab-content">
+    <div class="section-eyebrow">Votre collection</div>
+    <div class="section-heading">Bibliothèque</div>
+    <div class="section-subtitle">Toute votre musique, réunie au même endroit.</div>
+
+    <div class="section-eyebrow" style="margin-bottom: 12px;">Vos playlists</div>
+    <div class="playlists-grid">
+      <button class="playlist-box" id="open-favorites">
+        <strong>♥ Favoris</strong>
+        <span id="favorites-count">Vos titres préférés</span>
+      </button>
+      <button class="playlist-box" id="open-rated">
+        <strong>★ Notes</strong>
+        <span id="rated-count">Vos morceaux notés</span>
+      </button>
+      <button class="playlist-box" style="grid-column: span 2;" id="open-history">
+        <strong>⏱ Historique</strong>
+        <span id="history-count">Sons réellement écoutés</span>
+      </button>
+    </div>
+
+    <div class="section-eyebrow" style="margin-top: 20px; margin-bottom: 12px;">Mes playlists</div>
+    <div id="playlists-list"></div>
+    <div class="card">
+      <h2>Nouvelle playlist</h2>
+      <p>Créez une playlist vide, ou ajoutez directement un morceau depuis la recherche avec le bouton ＋.</p>
+      <input class="search-input" id="new-playlist-name" maxlength="30" placeholder="Nom de la playlist" autocomplete="off">
+      <button class="btn secondary" id="btn-create-playlist">Créer la playlist</button>
+    </div>
+
+    <div class="section-eyebrow" style="margin-top: 20px; margin-bottom: 12px;" id="library-heading">Morceaux & Notes du groupe</div>
+    <div id="library-list"></div>
+  </div>
+
+  <!-- TAB 3 : COMMUNAUTÉ -->
+  <div id="tab-communautaire" class="tab-content">
+    <div class="section-eyebrow">Partage en direct</div>
+    <div class="section-heading">Communauté</div>
+    <div class="section-subtitle">Partagez vos sessions et découvrez les goûts des autres.</div>
+
+    <div class="card">
+      <h2>Session Juke-box</h2>
+      <p>Votre code de session est prêt. Les amis pourront bientôt l'utiliser pour ajouter des musiques et noter les morceaux en direct (la synchronisation entre téléphones demande un petit serveur gratuit).</p>
+      <div class="session-code" id="session-code">······</div>
+      <button class="btn" id="btn-copy-session">Copier le code de session</button>
+    </div>
+
+    <div class="card">
+      <h2>Fonctionnement</h2>
+      <p>1. Vous lancez une session. 2. Vos amis rejoignent avec le code. 3. Chacun ajoute un morceau, tout le monde note sur 5. Aucune publicité, aucun abonnement.</p>
+    </div>
+  </div>
+
+  <!-- TAB 4 : PROFIL -->
+  <div id="tab-profil" class="tab-content">
+    <div class="section-eyebrow">Votre espace</div>
+    <div class="section-heading">Profils</div>
+
+    <!-- Vue : mon profil -->
+    <div id="profil-self">
+      <div class="profile-hero">
+        <div class="avatar" id="self-avatar">🎧</div>
+        <div style="min-width: 0;">
+          <div class="profile-name" id="self-name">Moi</div>
+          <div class="profile-sub" id="self-status">En pause</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Mon code personnel</h2>
+        <p>Donnez ce code à vos amis pour qu'ils vous ajoutent à leur liste. Chaque profil a son propre code.</p>
+        <div class="session-code" id="self-code">----</div>
+        <button class="btn" id="btn-copy-code">Copier mon code</button>
+        <button class="btn secondary" id="btn-share-code">Partager mon lien de profil</button>
+      </div>
+
+      <div class="card">
+        <h2>Modifier mon profil</h2>
+        <p>Un pseudo et un avatar, c'est tout ce dont vos amis ont besoin.</p>
+        <input class="search-input" id="edit-name" maxlength="20" placeholder="Votre pseudo">
+        <div class="emoji-row" id="emoji-row"></div>
+        <button class="btn secondary" id="btn-save-profile">Enregistrer</button>
+      </div>
+
+      <div class="section-eyebrow" style="margin-top: 20px; margin-bottom: 12px;">En direct maintenant</div>
+      <div id="live-now"></div>
+
+      <div class="section-eyebrow" style="margin-top: 20px; margin-bottom: 12px;">Mes amis</div>
+      <div id="friends-list"></div>
+
+      <div class="card" style="margin-top: 16px;">
+        <h2>Ajouter un ami</h2>
+        <p>Entrez le code personnel que votre ami vous a donné.</p>
+        <input class="search-input" id="friend-code" placeholder="XXXX-XXXX" maxlength="12" autocomplete="off">
+        <button class="btn secondary" id="btn-add-friend">Ajouter cet ami</button>
+      </div>
+
+      <div class="section-eyebrow" style="margin-top: 20px; margin-bottom: 12px;">Autres profils sur cet appareil</div>
+      <div id="profiles-list"></div>
+
+      <div class="card">
+        <h2>Créer un profil</h2>
+        <p>Chaque profil garde ses propres favoris, ses notes et son code personnel.</p>
+        <input class="search-input" id="new-profile-name" maxlength="20" placeholder="Pseudo du nouveau profil" autocomplete="off">
+        <button class="btn secondary" id="btn-create-profile">Créer le profil</button>
+      </div>
+    </div>
+
+    <!-- Vue : profil d'un ami -->
+    <div id="profil-other" style="display: none;">
+      <button class="back-link" id="btn-back-profil">← Retour à mon profil</button>
+      <div class="profile-hero">
+        <div class="avatar" id="other-avatar">🎧</div>
+        <div style="min-width: 0;">
+          <div class="profile-name" id="other-name">Ami</div>
+          <div class="profile-sub" id="other-status">Hors ligne</div>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Code personnel</h2>
+        <p id="other-code-line">—</p>
+        <button class="btn secondary" id="btn-add-other">Ajouter à mes amis</button>
+      </div>
+      <div class="section-eyebrow" style="margin-bottom: 12px;">Ses notes sur 5</div>
+      <div id="other-ratings"></div>
+      <div class="section-eyebrow" style="margin-top: 20px; margin-bottom: 12px;">Ses favoris</div>
+      <div id="other-favorites"></div>
+    </div>
+  </div>
+
+  <!-- TAB 5 : RÉGLAGES -->
+  <div id="tab-reglages" class="tab-content">
+    <div class="section-eyebrow">Paramètres</div>
+    <div class="section-heading">Réglages</div>
+    <div class="section-subtitle">Configuration et comptes connectés.</div>
+
+    <div class="card">
+      <h2>Mode de lecture</h2>
+      <p>Choisissez ce que fait un appui sur ▶. L'extrait de 30 s reste toujours accessible avec le bouton « 30 » sur chaque résultat : pratique pour vérifier rapidement qu'on a le bon son.</p>
+      <div class="mode-row">
+        <button class="mode-btn" data-mode="preview">▶ Extrait 30 s</button>
+        <button class="mode-btn" data-mode="spotify">♪ Lecture complète</button>
+      </div>
+      <p id="spotify-state" style="margin-bottom: 10px;">Non connecté</p>
+      <button class="btn secondary" id="btn-spotify-connect">Connecter Spotify</button>
+    </div>
+
+    <div class="card">
+      <h2>Mes playlists Spotify</h2>
+      <p>Connecte ton compte Spotify pour importer tes playlists et tous leurs sons. Chaque ami se connecte avec son propre compte, en un clic. La lecture complète demande un compte Spotify Premium.</p>
+      <div id="spotify-notice" class="notice" style="display: none;"></div>
+      <div id="spotify-playlists"></div>
+      <button class="link-btn" id="btn-admin">Réglages développeur (privé)</button>
+    </div>
+
+    <div class="card">
+      <h2>Mes données</h2>
+      <p>Tous les profils, favoris, notes et codes sont enregistrés uniquement dans votre navigateur. Rien n'est envoyé sur un serveur.</p>
+      <button class="btn secondary" id="btn-reset">Réinitialiser mes données</button>
+    </div>
+
+    <div class="card">
+      <h2>À propos de RezMusic</h2>
+      <p>Version v17 • Recherche instantanée, playlists, historique des sons écoutés, lecteur immersif aux couleurs de la pochette, profils avec code personnel et lecture complète Spotify (Premium requis).</p>
+    </div>
+  </div>
+
+  <div class="mini-player" id="mini-player">
+    <img class="mini-art" id="mini-art" alt="">
+    <div class="mini-info">
+      <div class="mini-title" id="mini-title">Aucun titre</div>
+      <div class="mini-artist" id="mini-artist">—</div>
+    </div>
+    <button class="mini-btn" id="mini-prev" title="Précédent">⏮</button>
+    <button class="mini-btn play" id="mini-toggle" title="Lecture / Pause">▶</button>
+    <button class="mini-btn" id="mini-next" title="Suivant">⏭</button>
+  </div>
+
+  <!-- Barre de Navigation du Bas -->
+  <nav class="nav-bar">
+    <button class="nav-item active" data-tab="accueil">
+      <span class="nav-icon">⌂</span>
+      <span>Accueil</span>
+    </button>
+    <button class="nav-item" data-tab="musique">
+      <span class="nav-icon">≡</span>
+      <span>Musique</span>
+    </button>
+    <button class="nav-item" data-tab="communautaire">
+      <span class="nav-icon">○</span>
+      <span>Communauté</span>
+    </button>
+    <button class="nav-item" data-tab="reglages">
+      <span class="nav-icon">⚙</span>
+      <span>Réglages</span>
+    </button>
+  </nav>
+
+  <div class="sheet" id="admin-sheet">
+    <div class="sheet-card">
+      <div class="sheet-title">Réglages développeur</div>
+      <div id="admin-lock">
+        <p style="font-size: 12px; color: var(--text-secondary); line-height: 1.5; margin: 0 0 12px;">
+          Menu privé. Tes amis n'en ont pas besoin : ils cliquent simplement sur « Se connecter avec Spotify ».
+        </p>
+        <input class="search-input" id="admin-password" type="password" placeholder="Mot de passe" autocomplete="off">
+        <button class="btn" id="admin-unlock">Déverrouiller</button>
+        <p id="admin-hint" style="font-size: 11px; color: var(--text-secondary); margin-top: 10px;">Première fois : choisis un mot de passe (4 caractères minimum).</p>
+      </div>
+      <div id="admin-content" style="display: none;">
+        <input class="search-input" id="spotify-client-id" maxlength="40" placeholder="Client ID Spotify (32 caractères)" autocomplete="off">
+        <button class="btn secondary" id="btn-save-client-id">Enregistrer le Client ID</button>
+        <button class="btn secondary" id="btn-spotify-test">Tester la connexion Spotify</button>
+        <pre class="diag" id="spotify-diag"></pre>
+      </div>
+      <button class="btn secondary" id="admin-close">Fermer</button>
+    </div>
+  </div>
+
+  <div class="sheet" id="playlist-sheet">
+    <div class="sheet-card">
+      <div class="sheet-title">Ajouter à une playlist</div>
+      <div id="sheet-playlists"></div>
+      <input class="search-input" id="sheet-new-name" maxlength="30" placeholder="Ou créer une nouvelle playlist" autocomplete="off">
+      <button class="btn" id="sheet-create">Créer et ajouter</button>
+      <button class="btn secondary" id="sheet-cancel">Annuler</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    'use strict';
+
+    var DB_KEY = 'rezmusic.db.v1';
+    var LIVE_KEY = 'rezmusic.live.v1';
+    var OLD_FAV_KEY = 'rezmusic.favorites.v1';
+    var OLD_RATINGS_KEY = 'rezmusic.ratings.v1';
+    var OLD_SESSION_KEY = 'rezmusic.session.v1';
+    var LIVE_TTL = 120000;
+    var HEARTBEAT_MS = 45000;
+    var EMOJIS = ['🎧', '🎵', '🎸', '🎹', '🎤', '🔥', '🌙', '⚡', '🦊', '🐼', '🚀', '💿'];
+
+    var audio = new Audio();
+    audio.preload = 'none';
+
+    var state = {
+      queue: [],
+      index: -1,
+      libraryMode: 'favorites',
+      live: {},
+      channel: null,
+      heartbeat: null,
+      viewCode: null,
+      selectedEmoji: null,
+      playlistId: null,
+      pendingTrack: null,
+      playingVia: 'preview',
+      db: null
+    };
+
+    /* ---------- stockage local ---------- */
+    function load(key, fallback) {
+      try {
+        var raw = localStorage.getItem(key);
+        if (!raw) return fallback;
+        var parsed = JSON.parse(raw);
+        return parsed == null ? fallback : parsed;
+      } catch (e) {
+        return fallback;
+      }
+    }
+
+    function save(key, value) {
+      try {
+        localStorage.setItem(key, JSON.stringify(value));
+      } catch (e) {
+        toast('Stockage du navigateur indisponible.');
+      }
+    }
+
+    /* ---------- utilitaires ---------- */
+    function escapeHtml(value) {
+      return String(value == null ? '' : value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function formatTime(seconds) {
+      if (!isFinite(seconds) || seconds < 0) seconds = 0;
+      var m = Math.floor(seconds / 60);
+      var s = Math.floor(seconds % 60);
+      return m + ':' + (s < 10 ? '0' : '') + s;
+    }
+
+    function uid() {
+      return 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+    }
+
+    function makeCode() {
+      var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+      var raw = '';
+      for (var i = 0; i < 8; i++) raw += chars.charAt(Math.floor(Math.random() * chars.length));
+      return raw.slice(0, 4) + '-' + raw.slice(4);
+    }
+
+    function normalizeCode(value) {
+      return String(value || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8);
+    }
+
+    function prettyCode(value) {
+      var clean = normalizeCode(value);
+      return clean.length > 4 ? clean.slice(0, 4) + '-' + clean.slice(4) : clean;
+    }
+
+    var toastTimer = null;
+    function toast(message) {
+      var el = document.getElementById('toast');
+      el.textContent = message;
+      el.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(function () {
+        el.classList.remove('show');
+      }, 2800);
+    }
+
+    /* ---------- base de profils ---------- */
+    function newProfile(name, emoji) {
+      return {
+        id: uid(),
+        code: makeCode(),
+        name: name || 'Moi',
+        emoji: emoji || '🎧',
+        createdAt: Date.now(),
+        favorites: [],
+        ratings: {},
+        history: [],
+        playlists: [],
+        friends: []
+      };
+    }
+
+    function normalizeRatingEntry(entry) {
+      if (entry && typeof entry === 'object') {
+        return {
+          value: Number(entry.value) || 0,
+          title: entry.title || '',
+          artist: entry.artist || '',
+          artwork: entry.artwork || '',
+          preview: entry.preview || '',
+          at: Number(entry.at) || Date.now()
+        };
+      }
+      return {
+        value: Number(entry) || 0,
+        title: '',
+        artist: '',
+        artwork: '',
+        preview: '',
+        at: Date.now()
+      };
+    }
+
+    function initDb() {
+      var db = load(DB_KEY, null);
+
+      if (!db || !db.profiles || !db.profiles.length) {
+        var profile = newProfile('Moi', '🎧');
+        var oldFavorites = load(OLD_FAV_KEY, []);
+        if (Array.isArray(oldFavorites)) {
+          profile.favorites = oldFavorites.filter(function (track) {
+            return track && track.id && track.title;
+          });
+        }
+        var oldRatings = load(OLD_RATINGS_KEY, {});
+        Object.keys(oldRatings || {}).forEach(function (id) {
+          profile.ratings[id] = normalizeRatingEntry(oldRatings[id]);
+        });
+        db = { profiles: [profile], activeId: profile.id };
+        save(DB_KEY, db);
+      }
+
+      db.profiles.forEach(function (profile) {
+        if (!profile.code) profile.code = makeCode();
+        if (!profile.emoji) profile.emoji = '🎧';
+        if (!profile.name) profile.name = 'Moi';
+        if (!Array.isArray(profile.favorites)) profile.favorites = [];
+        if (!Array.isArray(profile.friends)) profile.friends = [];
+        if (!Array.isArray(profile.history)) profile.history = [];
+        if (!Array.isArray(profile.playlists)) profile.playlists = [];
+        if (!profile.ratings || typeof profile.ratings !== 'object') profile.ratings = {};
+        Object.keys(profile.ratings).forEach(function (id) {
+          profile.ratings[id] = normalizeRatingEntry(profile.ratings[id]);
+        });
+      });
+
+      if (!db.settings || typeof db.settings !== 'object') db.settings = {};
+      if (db.settings.playbackMode !== 'spotify') db.settings.playbackMode = 'preview';
+
+      var exists = db.profiles.some(function (p) { return p.id === db.activeId; });
+      if (!exists) db.activeId = db.profiles[0].id;
+
+      state.db = db;
+      save(DB_KEY, db);
+    }
+
+    function saveDb() {
+      save(DB_KEY, state.db);
+    }
+
+    function activeProfile() {
+      var db = state.db;
+      if (!db || !db.profiles.length) return null;
+      for (var i = 0; i < db.profiles.length; i++) {
+        if (db.profiles[i].id === db.activeId) return db.profiles[i];
+      }
+      return db.profiles[0];
+    }
+
+    function profileByCode(code) {
+      var clean = prettyCode(code);
+      if (!state.db) return null;
+      for (var i = 0; i < state.db.profiles.length; i++) {
+        if (state.db.profiles[i].code === clean) return state.db.profiles[i];
+      }
+      return null;
+    }
+
+    /* ---------- recherche (API publique iTunes, sans clé) ---------- */
+    var jsonpSeq = 0;
+
+    function jsonp(url, params, timeoutMs) {
+      return new Promise(function (resolve, reject) {
+        var name = 'rezCb' + (++jsonpSeq) + '_' + Math.random().toString(36).slice(2, 7);
+        var script = document.createElement('script');
+        var done = false;
+
+        var timer = setTimeout(function () {
+          finish(new Error('Délai dépassé. Vérifiez votre connexion.'));
+        }, timeoutMs || 9000);
+
+        function finish(error, data) {
+          if (done) return;
+          done = true;
+          clearTimeout(timer);
+          try { delete window[name]; } catch (e) { window[name] = undefined; }
+          if (script.parentNode) script.parentNode.removeChild(script);
+          if (error) reject(error);
+          else resolve(data);
+        }
+
+        window[name] = function (data) { finish(null, data); };
+        script.onerror = function () { finish(new Error('Recherche indisponible hors connexion.')); };
+
+        var query = [];
+        for (var key in params) {
+          if (Object.prototype.hasOwnProperty.call(params, key)) {
+            query.push(encodeURIComponent(key) + '=' + encodeURIComponent(params[key]));
+          }
+        }
+        query.push('callback=' + encodeURIComponent(name));
+        script.src = url + '?' + query.join('&');
+        document.head.appendChild(script);
+      });
+    }
+
+    function normalizeTrack(item) {
+      var artwork = item.artworkUrl100 || item.artworkUrl60 || '';
+      return {
+        id: String(item.trackId || item.collectionId || item.artistId || Math.random()),
+        title: item.trackName || item.collectionName || 'Titre inconnu',
+        artist: item.artistName || 'Artiste inconnu',
+        album: item.collectionName || '',
+        artwork: artwork.replace('100x100', '300x300'),
+        preview: item.previewUrl || '',
+        duration: item.trackTimeMillis ? Math.round(item.trackTimeMillis / 1000) : 0
+      };
+    }
+
+    var searchToken = 0;
+    var lastSearchTerm = '';
+    var cspBlocked = false;
+
+    document.addEventListener('securitypolicyviolation', function (event) {
+      if (/itunes|deezer/.test(event.blockedURI || '')) cspBlocked = true;
+    });
+
+    function cleanResults(list) {
+      var seen = {};
+      return list.filter(function (track) {
+        if (!track || !track.id || seen[track.id]) return false;
+        seen[track.id] = true;
+        return true;
+      });
+    }
+
+    function sourceItunes(term) {
+      return jsonp('https://itunes.apple.com/search', {
+        term: term,
+        media: 'music',
+        entity: 'song',
+        limit: '25',
+        country: 'FR',
+        lang: 'fr_fr'
+      }).then(function (data) {
+        return cleanResults((data && data.results ? data.results : []).map(normalizeTrack));
+      });
+    }
+
+    function sourceDeezer(term) {
+      return jsonp('https://api.deezer.com/search', {
+        q: term,
+        limit: '25',
+        output: 'jsonp'
+      }).then(function (data) {
+        var items = (data && data.data ? data.data : []).map(function (item) {
+          return {
+            id: 'dz' + item.id,
+            title: item.title_short || item.title || 'Titre inconnu',
+            artist: (item.artist && item.artist.name) || 'Artiste inconnu',
+            album: (item.album && item.album.title) || '',
+            artwork: (item.album && (item.album.cover_big || item.album.cover_medium)) || '',
+            preview: item.preview || '',
+            duration: Number(item.duration) || 0
+          };
+        });
+        return cleanResults(items);
+      });
+    }
+
+    function setSearchHint(text) {
+      var hint = document.getElementById('search-hint');
+      if (hint) hint.textContent = text;
+    }
+
+    function showSearchFailure() {
+      state.queue = [];
+      renderResults([]);
+      document.getElementById('search-results').innerHTML =
+        '<div class="empty-state">La recherche n\'a pas pu joindre le catalogue musical.' +
+        (cspBlocked
+          ? '<br><br>Cette page bloque les appels vers les services externes (règle de sécurité de la prévisualisation). Héberge le site (GitHub Pages, Netlify, Cloudflare Pages) ou ouvre-le en local : la recherche fonctionnera.'
+          : '<br><br>Vérifiez la connexion internet, puis réessayez.') +
+        '<br><br><button class="btn secondary" data-retry="1">Réessayer</button></div>';
+      setSearchHint('Recherche indisponible.');
+    }
+
+    function searchTracks(term) {
+      var cleaned = String(term || '').trim();
+      if (cleaned.length < 2) {
+        setSearchHint('Écrivez au moins 2 caractères.');
+        return Promise.resolve([]);
+      }
+
+      var token = ++searchToken;
+      lastSearchTerm = cleaned.toLowerCase();
+      setSearchHint('Recherche en cours…');
+
+      var preferSpotify = spotifyConnected() && playbackMode() === 'spotify';
+
+      return (preferSpotify
+        ? sourceSpotify(cleaned).catch(function () { return sourceItunes(cleaned); })
+        : sourceItunes(cleaned)
+      ).then(function (list) {
+        if (list.length) return { list: list };
+        return sourceDeezer(cleaned).then(function (deezerList) {
+          return { list: deezerList };
+        }, function () {
+          return { list: [] };
+        });
+      }).catch(function () {
+        return sourceDeezer(cleaned).then(function (list) {
+          return { list: list };
+        }, function () {
+          throw new Error('catalogues injoignables');
+        });
+      }).then(function (result) {
+        if (token !== searchToken) return [];
+        state.queue = result.list;
+        renderResults(result.list);
+        setSearchHint(result.list.length
+          ? result.list.length + ' résultat' + (result.list.length > 1 ? 's' : '') + ' • touchez ▶ pour écouter l\'extrait.'
+          : 'Aucun résultat pour « ' + cleaned + ' ». Essayez un autre titre ou artiste.');
+        updateHistoryCount();
+        return result.list;
+      }).catch(function () {
+        if (token !== searchToken) return [];
+        showSearchFailure();
+        return [];
+      });
+    }
+
+    function renderResults(list) {
+      var container = document.getElementById('search-results');
+      if (!list.length) {
+        container.innerHTML = '';
+        return;
+      }
+      container.innerHTML = list.slice(0, 12).map(function (track, index) {
+        var fav = isFavorite(track.id);
+        return '<div class="result-row" data-index="' + index + '">' +
+          (track.artwork
+            ? '<img class="result-art" src="' + escapeHtml(track.artwork) + '" alt="" loading="lazy">'
+            : '<div class="result-art"></div>') +
+          '<div class="result-info">' +
+            '<strong>' + escapeHtml(track.title) + '</strong>' +
+            '<span>' + escapeHtml(track.artist) + (track.preview ? '' : ' • extrait indisponible') + '</span>' +
+          '</div>' +
+          '<div class="result-actions">' +
+            '<button class="icon-btn fav' + (fav ? ' active' : '') + '" data-fav="' + escapeHtml(track.id) + '" title="Favori">♥</button>' +
+            '<button class="icon-btn add" data-add="' + index + '" title="Ajouter à une playlist">＋</button>' +
+            '<button class="icon-btn preview" data-preview="' + index + '" title="Écouter l\'extrait 30 s"' + (track.preview ? '' : ' disabled') + '>30</button>' +
+            '<button class="icon-btn play" data-play="' + index + '" title="Écouter"' + (track.preview || spotifyConnected() ? '' : ' disabled') + '>▶</button>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+    }
+
+    /* ---------- favoris & notes (par profil) ---------- */
+    function isFavorite(id) {
+      var profile = activeProfile();
+      if (!profile) return false;
+      return profile.favorites.some(function (track) { return track.id === id; });
+    }
+
+    function toggleFavorite(track) {
+      var profile = activeProfile();
+      if (!profile) return;
+      if (isFavorite(track.id)) {
+        profile.favorites = profile.favorites.filter(function (item) { return item.id !== track.id; });
+        toast('Retiré des favoris');
+      } else {
+        profile.favorites.push(track);
+        toast('Ajouté aux favoris');
+      }
+      saveDb();
+      refreshProfileUi();
+      renderResults(state.queue);
+      renderLibrary();
+    }
+
+    function setRating(track, value) {
+      var profile = activeProfile();
+      if (!profile) return;
+      if (!value) {
+        delete profile.ratings[track.id];
+        toast('Note retirée');
+      } else {
+        profile.ratings[track.id] = {
+          value: value,
+          title: track.title,
+          artist: track.artist,
+          artwork: track.artwork || '',
+          preview: track.preview || '',
+          at: Date.now()
+        };
+        toast('Note : ' + value + '/5');
+      }
+      saveDb();
+      renderLibrary();
+      refreshProfileUi();
+      document.querySelectorAll('.track-row[data-id="' + track.id + '"] .stars').forEach(updateStars);
+    }
+
+    function updateStars(element) {
+      var value = Number(element.getAttribute('data-value')) || 0;
+      var html = '';
+      for (var i = 1; i <= 5; i++) {
+        html += '<span class="' + (i <= value ? 'on' : '') + '">' + (i <= value ? '★' : '☆') + '</span>';
+      }
+      element.innerHTML = html;
+    }
+
+    function starsMarkup(value) {
+      var html = '';
+      for (var i = 1; i <= 5; i++) {
+        html += '<span class="' + (i <= value ? 'on' : '') + '">' + (i <= value ? '★' : '☆') + '</span>';
+      }
+      return html;
+    }
+
+    function ratedEntries(profile) {
+      var ids = Object.keys(profile.ratings || {});
+      return ids.map(function (id) {
+        return { id: id, data: profile.ratings[id] };
+      }).filter(function (entry) {
+        return entry.data && entry.data.value > 0;
+      }).sort(function (a, b) {
+        return (b.data.at || 0) - (a.data.at || 0);
+      });
+    }
+
+    function ratedTracks(profile) {
+      return ratedEntries(profile).map(function (entry) {
+        return {
+          id: entry.id,
+          title: entry.data.title || 'Titre noté',
+          artist: entry.data.artist || '',
+          artwork: entry.data.artwork || '',
+          preview: entry.data.preview || '',
+          duration: 0
+        };
+      });
+    }
+
+    function findTrack(id) {
+      var profile = activeProfile();
+      if (profile) {
+        var fav = profile.favorites.find(function (track) { return track.id === id; });
+        if (fav) return fav;
+      }
+      return state.queue.find(function (track) { return track.id === id; }) || null;
+    }
+
+    /* ---------- présence en direct ---------- */
+    function liveEntry(code) {
+      var entry = state.live[code];
+      if (!entry || !entry.playing || !entry.track) return null;
+      if (Date.now() - (Number(entry.at) || 0) > LIVE_TTL) return null;
+      return entry;
+    }
+
+    function publishLive(playing) {
+      var profile = activeProfile();
+      if (!profile) return;
+      var track = playing ? currentTrack() : null;
+      if (playing && !track) return;
+
+      var payload = {
+        code: profile.code,
+        name: profile.name,
+        emoji: profile.emoji,
+        playing: !!playing,
+        track: track ? {
+          title: track.title,
+          artist: track.artist,
+          artwork: track.artwork || ''
+        } : null,
+        at: Date.now()
+      };
+
+      state.live[profile.code] = payload;
+
+      var stored = load(LIVE_KEY, {});
+      stored[profile.code] = payload;
+      Object.keys(stored).forEach(function (code) {
+        var item = stored[code];
+        if (!item || Date.now() - (Number(item.at) || 0) > LIVE_TTL * 4) delete stored[code];
+      });
+      save(LIVE_KEY, stored);
+
+      if (state.channel) {
+        try { state.channel.postMessage(payload); } catch (e) { /* ignore */ }
+      }
+
+      renderLiveUi();
+    }
+
+    function handleLivePayload(payload) {
+      if (!payload || !payload.code) return;
+      state.live[payload.code] = payload;
+      renderLiveUi();
+    }
+
+    function watchLive() {
+      state.live = load(LIVE_KEY, {}) || {};
+
+      try {
+        state.channel = new BroadcastChannel('rezmusic-live');
+        state.channel.onmessage = function (event) { handleLivePayload(event.data); };
+      } catch (e) {
+        state.channel = null;
+      }
+
+      window.addEventListener('storage', function (event) {
+        if (event.key === LIVE_KEY) {
+          state.live = load(LIVE_KEY, {}) || {};
+          renderLiveUi();
+        }
+      });
+
+      clearInterval(state.heartbeat);
+      state.heartbeat = setInterval(function () {
+        if (!audio.paused && audio.src) publishLive(true);
+        renderLiveUi();
+      }, HEARTBEAT_MS);
+    }
+
+    function liveFriends() {
+      var profile = activeProfile();
+      if (!profile) return [];
+      return profile.friends.map(function (code) {
+        return { code: code, entry: liveEntry(code), profile: profileByCode(code) };
+      });
+    }
+
+    function renderLiveUi() {
+      renderLiveFeed();
+      renderLiveNow();
+      renderFriends();
+      renderSelfStatus();
+    }
+
+    function renderLiveFeed() {
+      var container = document.getElementById('live-feed');
+      if (!container) return;
+      var profile = activeProfile();
+      var rows = [];
+      var selfEntry = profile ? liveEntry(profile.code) : null;
+
+      if (selfEntry) {
+        rows.push('<div class="live-item">' +
+          '<div><div class="live-user">Vous</div>' +
+          '<div class="live-track">Écoute : <em>' + escapeHtml(selfEntry.track.title) + ' - ' + escapeHtml(selfEntry.track.artist) + '</em></div></div>' +
+          '<span class="live-pill">live</span></div>');
+      }
+
+      liveFriends().forEach(function (friend) {
+        if (!friend.entry) return;
+        var name = friend.profile ? friend.profile.name : friend.entry.name;
+        rows.push('<div class="live-item">' +
+          '<div><div class="live-user">' + escapeHtml(name) + '</div>' +
+          '<div class="live-track">Écoute : <em>' + escapeHtml(friend.entry.track.title) + ' - ' + escapeHtml(friend.entry.track.artist) + '</em></div></div>' +
+          '<span class="live-pill">live</span></div>');
+      });
+
+      if (!rows.length) {
+        rows.push('<div class="live-track" style="margin-top: 8px;">Personne n\'écoute pour le moment. Ajoutez un ami avec son code depuis votre profil.</div>');
+      }
+      container.innerHTML = rows.join('');
+    }
+
+    function renderLiveNow() {
+      var container = document.getElementById('live-now');
+      if (!container) return;
+      var profile = activeProfile();
+      var rows = [];
+
+      var selfEntry = profile ? liveEntry(profile.code) : null;
+      if (selfEntry) {
+        rows.push('<div class="person-row" style="cursor: default;">' +
+          '<div class="person-avatar">' + escapeHtml(profile.emoji) + '</div>' +
+          '<div class="person-info"><div class="person-name">' + escapeHtml(profile.name) + ' (vous)</div>' +
+          '<div class="person-sub">' + escapeHtml(selfEntry.track.title) + ' - ' + escapeHtml(selfEntry.track.artist) + '</div></div>' +
+          '<span class="live-pill">live</span></div>');
+      }
+
+      liveFriends().forEach(function (friend) {
+        if (!friend.entry) return;
+        var name = friend.profile ? friend.profile.name : friend.entry.name;
+        rows.push('<div class="person-row" style="cursor: default;">' +
+          '<div class="person-avatar">' + escapeHtml(friend.profile ? friend.profile.emoji : friend.entry.emoji) + '</div>' +
+          '<div class="person-info"><div class="person-name">' + escapeHtml(name) + '</div>' +
+          '<div class="person-sub">' + escapeHtml(friend.entry.track.title) + ' - ' + escapeHtml(friend.entry.track.artist) + '</div></div>' +
+          '<span class="live-pill">live</span></div>');
+      });
+
+      container.innerHTML = rows.length
+        ? rows.join('')
+        : '<div class="empty-state">Personne n\'écoute en direct. Lancez un morceau : votre profil passera en « live » pour vos amis.</div>';
+    }
+
+    function renderFriends() {
+      var container = document.getElementById('friends-list');
+      if (!container) return;
+      var profile = activeProfile();
+      if (!profile || !profile.friends.length) {
+        container.innerHTML = '<div class="empty-state">Aucun ami pour le moment. Ajoutez quelqu\'un avec le code de son profil.</div>';
+        return;
+      }
+
+      container.innerHTML = profile.friends.map(function (code) {
+        var known = profileByCode(code);
+        var entry = liveEntry(code);
+        var name = known ? known.name : (entry ? entry.name : 'Profil ' + code);
+        var emoji = known ? known.emoji : (entry ? entry.emoji : '👤');
+        var subtitle = entry
+          ? 'Écoute : ' + entry.track.title + ' - ' + entry.track.artist
+          : (known ? 'Notes et favoris disponibles' : 'En attente de synchronisation');
+        var badge = entry ? '<span class="live-pill">live</span>' : '<span class="code-inline">' + escapeHtml(code) + '</span>';
+
+        return '<button class="person-row" data-open-profile="' + escapeHtml(code) + '">' +
+          '<div class="person-avatar">' + escapeHtml(emoji) + '</div>' +
+          '<div class="person-info"><div class="person-name">' + escapeHtml(name) + '</div>' +
+          '<div class="person-sub">' + escapeHtml(subtitle) + '</div></div>' +
+          badge + '</button>';
+      }).join('');
+    }
+
+    function renderSelfStatus() {
+      var profile = activeProfile();
+      if (!profile) return;
+      var status = document.getElementById('self-status');
+      var entry = liveEntry(profile.code);
+      if (entry) {
+        status.textContent = 'En direct : ' + entry.track.title + ' - ' + entry.track.artist;
+        status.classList.add('live');
+      } else {
+        status.textContent = 'En pause';
+        status.classList.remove('live');
+      }
+      document.getElementById('chip-avatar').textContent = profile.emoji;
+      document.getElementById('chip-name').textContent = profile.name;
+      document.getElementById('self-avatar').textContent = profile.emoji;
+      document.getElementById('self-name').textContent = profile.name;
+      document.getElementById('self-code').textContent = profile.code;
+    }
+
+    /* ---------- lecteur ---------- */
+    function playIndex(index, forcePreview) {
+      var queue = state.queue;
+      if (!queue.length) return;
+      if (index < 0) index = queue.length - 1;
+      if (index >= queue.length) index = 0;
+
+      var track = queue[index];
+      if (!track) return;
+
+      var wantsFull = !forcePreview && playbackMode() === 'spotify' && spotifyConnected();
+
+      state.index = index;
+      updatePlayerUi(track);
+      highlightPlaying();
+
+      if (wantsFull) {
+        document.getElementById('player-meta').textContent = 'Connexion à Spotify…';
+        playWithSpotify(track).catch(function (error) {
+          toast(error.message + ' — lecteur Spotify intégré.');
+          showSpotifyEmbedForTrack(track);
+        });
+        return;
+      }
+
+      if (!track.preview) {
+        if (spotifyConnected()) {
+          playWithSpotify(track).catch(function (error) { toast(error.message); });
+          return;
+        }
+        toast('Aucun extrait disponible pour ce titre.');
+        return;
+      }
+
+      startPreview(track);
+    }
+
+    function startPreview(track) {
+      state.playingVia = 'preview';
+      stopSpotifyTicker();
+      hideSpotifyEmbed();
+      audio.src = track.preview;
+      audio.play().catch(function () {
+        toast('Lecture bloquée par le navigateur. Touchez ▶ à nouveau.');
+      });
+      document.getElementById('player-meta').textContent = 'En lecture • extrait 30 s';
+    }
+
+    function currentTrack() {
+      return state.queue[state.index] || null;
+    }
+
+    function updatePlayerUi(track) {
+      updateMiniPlayer(track);
+      document.getElementById('current-track-title').textContent = track.title;
+      document.getElementById('current-track-artist').textContent = track.artist;
+      var art = document.getElementById('player-art');
+      if (track.artwork) {
+        art.src = track.artwork;
+        art.classList.add('visible');
+      } else {
+        art.removeAttribute('src');
+        art.classList.remove('visible');
+      }
+      applyArtworkMood(track);
+      document.getElementById('time-total').textContent = track.duration ? formatTime(track.duration) : '0:30';
+      document.getElementById('time-current').textContent = '0:00';
+      document.getElementById('progress').value = 0;
+    }
+
+    function hashAccent(seed) {
+      var hash = 0;
+      var text = String(seed || 'rezmusic');
+      for (var i = 0; i < text.length; i++) hash = (hash * 31 + text.charCodeAt(i)) % 3600;
+      return 'hsl(' + (hash % 360) + ', 62%, 46%)';
+    }
+
+    function extractAverageColor(url, done) {
+      try {
+        var img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = function () {
+          try {
+            var canvas = document.createElement('canvas');
+            canvas.width = 12;
+            canvas.height = 12;
+            var ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, 12, 12);
+            var data = ctx.getImageData(0, 0, 12, 12).data;
+            var r = 0, g = 0, b = 0, count = 0;
+            for (var i = 0; i < data.length; i += 4) {
+              if (data[i + 3] < 128) continue;
+              r += data[i];
+              g += data[i + 1];
+              b += data[i + 2];
+              count++;
+            }
+            if (!count) { done(null); return; }
+            done('rgb(' + Math.round(r / count) + ', ' + Math.round(g / count) + ', ' + Math.round(b / count) + ')');
+          } catch (error) {
+            done(null);
+          }
+        };
+        img.onerror = function () { done(null); };
+        img.src = url;
+      } catch (error) {
+        done(null);
+      }
+    }
+
+    function applyArtworkMood(track) {
+      var card = document.getElementById('player-card');
+      var bg = document.getElementById('player-bg');
+      if (!card || !bg) return;
+
+      document.documentElement.style.setProperty('--accent', hashAccent(track ? (track.id || track.title) : 'rezmusic'));
+
+      if (!track || !track.artwork) {
+        bg.classList.remove('visible');
+        bg.style.backgroundImage = '';
+        card.classList.remove('immersive');
+        return;
+      }
+
+      bg.style.backgroundImage = 'url("' + String(track.artwork).replace(/"/g, '%22') + '")';
+      bg.classList.add('visible');
+      card.classList.add('immersive');
+
+      extractAverageColor(track.artwork, function (color) {
+        if (color) document.documentElement.style.setProperty('--accent', color);
+      });
+    }
+
+    function highlightPlaying() {
+      document.querySelectorAll('.result-row').forEach(function (row) {
+        row.classList.toggle('playing', Number(row.getAttribute('data-index')) === state.index);
+      });
+    }
+
+    function togglePlay() {
+      if (state.playingVia === 'spotify' && spotifyConnected()) {
+        var isPlaying = document.getElementById('btn-play').textContent === '❚❚';
+        spotifyApi('/me/player/' + (isPlaying ? 'pause' : 'play'), { method: 'PUT' })
+          .then(function () {
+            document.getElementById('btn-play').textContent = isPlaying ? '▶' : '❚❚';
+            document.getElementById('visualizer').classList.toggle('playing', !isPlaying);
+            document.getElementById('visualizer-state').textContent = isPlaying ? 'En pause' : 'En lecture';
+          })
+          .catch(function (error) { toast(error.message); });
+        return;
+      }
+
+      if (!audio.src) {
+        if (state.queue.length) playIndex(0);
+        else toast('Cherchez d\'abord un morceau.');
+        return;
+      }
+      if (audio.paused) {
+        audio.play().catch(function () { toast('Lecture impossible.'); });
+      } else {
+        audio.pause();
+      }
+    }
+
+    function playNext() {
+      if (!state.queue.length) { toast('Aucun titre dans la file.'); return; }
+      playIndex(state.index + 1);
+    }
+
+    function playPrevious() {
+      if (!state.queue.length) { toast('Aucun titre dans la file.'); return; }
+      if (audio.currentTime > 3) { audio.currentTime = 0; return; }
+      playIndex(state.index - 1);
+    }
+
+    audio.addEventListener('play', function () {
+      document.getElementById('btn-play').textContent = '❚❚';
+      document.getElementById('visualizer').classList.add('playing');
+      document.getElementById('visualizer-state').textContent = 'En lecture';
+      document.getElementById('player-meta').textContent = 'En lecture • extrait 30 s';
+      updateMiniPlayer(currentTrack());
+      addToHistory(currentTrack());
+      publishLive(true);
+    });
+
+    audio.addEventListener('pause', function () {
+      document.getElementById('btn-play').textContent = '▶';
+      document.getElementById('visualizer').classList.remove('playing');
+      document.getElementById('visualizer-state').textContent = 'En pause';
+      updateMiniPlayer(currentTrack());
+      publishLive(false);
+    });
+
+    audio.addEventListener('ended', function () {
+      document.getElementById('btn-play').textContent = '▶';
+      document.getElementById('visualizer').classList.remove('playing');
+      playNext();
+    });
+
+    audio.addEventListener('error', function () {
+      document.getElementById('visualizer').classList.remove('playing');
+      document.getElementById('btn-play').textContent = '▶';
+      toast('Cet extrait n\'est pas lisible.');
+    });
+
+    audio.addEventListener('timeupdate', function () {
+      var duration = audio.duration || 30;
+      if (!isFinite(duration) || duration <= 0) return;
+      document.getElementById('time-current').textContent = formatTime(audio.currentTime);
+      document.getElementById('time-total').textContent = formatTime(duration);
+      document.getElementById('progress').value = (audio.currentTime / duration) * 100;
+    });
+
+    function updateHistoryCount() {
+      var el = document.getElementById('history-count');
+      if (!el) return;
+      var profile = activeProfile();
+      var count = profile && Array.isArray(profile.history) ? profile.history.length : 0;
+      el.textContent = count
+        ? count + ' son' + (count > 1 ? 's' : '') + ' écouté' + (count > 1 ? 's' : '')
+        : 'Sons réellement écoutés';
+    }
+
+    /* ---------- historique d'écoute (sons vraiment écoutés) ---------- */
+    function addToHistory(track) {
+      var profile = activeProfile();
+      if (!profile || !track) return;
+      if (!Array.isArray(profile.history)) profile.history = [];
+
+      profile.history = profile.history.filter(function (item) { return item.id !== track.id; });
+      profile.history.unshift({
+        id: track.id,
+        title: track.title,
+        artist: track.artist,
+        artwork: track.artwork || '',
+        preview: track.preview || '',
+        duration: track.duration || 0,
+        playedAt: Date.now()
+      });
+      if (profile.history.length > 50) profile.history = profile.history.slice(0, 50);
+
+      saveDb();
+      updateHistoryCount();
+      if (state.libraryMode === 'history') renderLibrary();
+    }
+
+    function historyTracks(profile) {
+      return (profile.history || []).map(function (item) {
+        return {
+          id: item.id,
+          title: item.title,
+          artist: item.artist,
+          artwork: item.artwork,
+          preview: item.preview,
+          duration: item.duration || 0
+        };
+      });
+    }
+
+    function playFromHistory(id) {
+      var profile = activeProfile();
+      if (!profile || !profile.history.length) return;
+      state.queue = historyTracks(profile);
+      var index = state.queue.findIndex(function (track) { return track.id === id; });
+      playIndex(index >= 0 ? index : 0);
+      renderLibrary();
+    }
+
+    /* ---------- bibliothèque ---------- */
+    function renderLibrary() {
+      var container = document.getElementById('library-list');
+      var heading = document.getElementById('library-heading');
+      var profile = activeProfile();
+      if (!container || !profile) return;
+
+      var currentPlaylist = state.libraryMode === 'playlist' && state.playlistId ? playlistById(state.playlistId) : null;
+
+      var list = state.libraryMode === 'rated'
+        ? ratedTracks(profile)
+        : state.libraryMode === 'history'
+          ? historyTracks(profile)
+          : currentPlaylist
+            ? currentPlaylist.tracks
+            : profile.favorites;
+
+      if (state.libraryMode === 'rated') heading.textContent = 'Morceaux notés';
+      else if (state.libraryMode === 'history') heading.textContent = 'Historique d\'écoute';
+      else if (currentPlaylist) heading.textContent = currentPlaylist.name;
+      else heading.textContent = 'Morceaux & Notes du groupe';
+
+      if (!list.length) {
+        var messages = {
+          favorites: 'Aucun favori pour le moment. Touchez ♥ sur un titre dans le résultat de recherche.',
+          rated: 'Aucune note pour le moment. Touchez les étoiles d\'un morceau pour le noter sur 5.',
+          history: 'Aucun son écouté pour le moment. Lancez un morceau : il apparaîtra ici, et seulement s\'il a vraiment été écouté.',
+          playlist: 'Cette playlist est vide. Ajoutez un morceau depuis la recherche avec le bouton ＋.'
+        };
+        container.innerHTML = '<div class="empty-state">' + messages[state.libraryMode] + '</div>';
+        return;
+      }
+
+      container.innerHTML = list.map(function (track) {
+        var entry = profile.ratings[track.id];
+        var rating = entry ? Number(entry.value) || 0 : 0;
+        var playable = state.libraryMode === 'history' || state.libraryMode === 'playlist';
+        var removeBtn = state.libraryMode === 'playlist'
+          ? '<button class="icon-btn" data-remove-track="' + escapeHtml(track.id) + '" title="Retirer de la playlist">✕</button>'
+          : '';
+        return '<div class="track-row' + (playable ? ' playable' : '') + '" data-id="' + escapeHtml(track.id) + '"' +
+          (playable ? ' data-play-history="' + escapeHtml(track.id) + '"' : '') + '>' +
+          '<div class="track-details">' +
+            '<strong>' + escapeHtml(track.title) + '</strong>' +
+            '<span>' + escapeHtml(track.artist) + (track.preview ? '' : ' • extrait indisponible') + '</span>' +
+          '</div>' +
+          '<div class="stars" data-value="' + rating + '" data-track="' + escapeHtml(track.id) + '">' +
+            starsMarkup(rating) +
+          '</div>' + removeBtn +
+        '</div>';
+      }).join('');
+    }
+
+    /* ---------- profils : rendu ---------- */
+    function refreshProfileUi() {
+      var profile = activeProfile();
+      if (!profile) return;
+
+      document.getElementById('chip-avatar').textContent = profile.emoji;
+      document.getElementById('chip-name').textContent = profile.name;
+      document.getElementById('self-avatar').textContent = profile.emoji;
+      document.getElementById('self-name').textContent = profile.name;
+      document.getElementById('self-code').textContent = profile.code;
+      document.getElementById('favorites-count').textContent = profile.favorites.length
+        ? profile.favorites.length + ' titre' + (profile.favorites.length > 1 ? 's' : '')
+        : 'Vos titres préférés';
+      var rated = ratedEntries(profile).length;
+      document.getElementById('rated-count').textContent = rated
+        ? rated + ' morceau' + (rated > 1 ? 'x' : '') + ' noté' + (rated > 1 ? 's' : '')
+        : 'Vos morceaux notés';
+
+      if (document.activeElement !== document.getElementById('edit-name')) {
+        document.getElementById('edit-name').value = profile.name;
+      }
+      updateHistoryCount();
+      state.selectedEmoji = profile.emoji;
+      renderEmojiRow();
+      renderProfilesList();
+      renderSelfStatus();
+    }
+
+    function renderEmojiRow() {
+      var row = document.getElementById('emoji-row');
+      if (!row) return;
+      row.innerHTML = EMOJIS.map(function (emoji) {
+        return '<button class="emoji-btn' + (emoji === state.selectedEmoji ? ' selected' : '') +
+          '" data-emoji="' + escapeHtml(emoji) + '">' + emoji + '</button>';
+      }).join('');
+    }
+
+    function renderProfilesList() {
+      var container = document.getElementById('profiles-list');
+      if (!container) return;
+      var active = activeProfile();
+      var others = state.db.profiles.filter(function (profile) {
+        return active && profile.id !== active.id;
+      });
+
+      if (!others.length) {
+        container.innerHTML = '<div class="empty-state">Un seul profil sur cet appareil. Créez-en un autre pour tester le partage de code.</div>';
+        return;
+      }
+
+      container.innerHTML = others.map(function (profile) {
+        return '<button class="person-row" data-switch-profile="' + escapeHtml(profile.id) + '">' +
+          '<div class="person-avatar">' + escapeHtml(profile.emoji) + '</div>' +
+          '<div class="person-info"><div class="person-name">' + escapeHtml(profile.name) + '</div>' +
+          '<div class="person-sub">Code ' + escapeHtml(profile.code) + ' • ' + profile.favorites.length + ' favori' + (profile.favorites.length > 1 ? 's' : '') + '</div></div>' +
+          '<span class="code-inline">Utiliser</span></button>';
+      }).join('');
+    }
+
+    function showProfileSelf() {
+      state.viewCode = null;
+      document.getElementById('profil-self').style.display = 'block';
+      document.getElementById('profil-other').style.display = 'none';
+    }
+
+    function openProfile(code) {
+      var clean = prettyCode(code);
+      var me = activeProfile();
+      if (me && clean === me.code) {
+        showProfileSelf();
+        return;
+      }
+
+      var profile = profileByCode(clean);
+      var entry = liveEntry(clean);
+
+      state.viewCode = clean;
+      document.getElementById('profil-self').style.display = 'none';
+      document.getElementById('profil-other').style.display = 'block';
+
+      var name = profile ? profile.name : (entry ? entry.name : 'Profil inconnu');
+      var emoji = profile ? profile.emoji : (entry ? entry.emoji : '👤');
+
+      document.getElementById('other-avatar').textContent = emoji;
+      document.getElementById('other-name').textContent = name;
+
+      var status = document.getElementById('other-status');
+      if (entry) {
+        status.textContent = 'En direct : ' + entry.track.title + ' - ' + entry.track.artist;
+        status.classList.add('live');
+      } else {
+        status.textContent = 'En pause';
+        status.classList.remove('live');
+      }
+
+      document.getElementById('other-code-line').textContent = profile
+        ? 'Code ' + clean + ' • ' + (profile.favorites.length) + ' favori' + (profile.favorites.length > 1 ? 's' : '')
+        : 'Code ' + clean;
+
+      var addButton = document.getElementById('btn-add-other');
+      var already = me && me.friends.indexOf(clean) >= 0;
+      addButton.textContent = already ? 'Déjà dans mes amis' : 'Ajouter à mes amis';
+      addButton.disabled = !!already;
+
+      var ratingsContainer = document.getElementById('other-ratings');
+      if (!profile) {
+        ratingsContainer.innerHTML = '<div class="empty-state">Ce profil n\'est pas encore connu de cet appareil. Ses notes apparaîtront ici une fois la synchronisation entre amis activée.</div>';
+      } else {
+        var entries = ratedEntries(profile);
+        ratingsContainer.innerHTML = entries.length
+          ? entries.map(function (item) {
+              return '<div class="track-row">' +
+                '<div class="track-details"><strong>' + escapeHtml(item.data.title || 'Titre noté') + '</strong>' +
+                '<span>' + escapeHtml(item.data.artist || '') + '</span></div>' +
+                '<div class="mini-stars">' + starsMarkup(item.data.value) + '</div></div>';
+            }).join('')
+          : '<div class="empty-state">' + escapeHtml(name) + ' n\'a encore noté aucun morceau.</div>';
+      }
+
+      var favContainer = document.getElementById('other-favorites');
+      if (!profile || !profile.favorites.length) {
+        favContainer.innerHTML = '<div class="empty-state">Aucun favori visible pour ce profil.</div>';
+      } else {
+        favContainer.innerHTML = profile.favorites.slice(0, 6).map(function (track) {
+          return '<div class="track-row"><div class="track-details"><strong>' +
+            escapeHtml(track.title) + '</strong><span>' + escapeHtml(track.artist) + '</span></div></div>';
+        }).join('');
+      }
+    }
+
+    function createProfile() {
+      var input = document.getElementById('new-profile-name');
+      var name = input.value.trim();
+      if (!name) { toast('Donnez un pseudo au nouveau profil.'); return; }
+      var emoji = EMOJIS[Math.floor(Math.random() * EMOJIS.length)];
+      var profile = newProfile(name.slice(0, 20), emoji);
+      state.db.profiles.push(profile);
+      state.db.activeId = profile.id;
+      saveDb();
+      input.value = '';
+      publishLive(false);
+      refreshProfileUi();
+      renderLibrary();
+      renderResults(state.queue);
+      showProfileSelf();
+      toast('Profil « ' + profile.name + ' » créé. Code : ' + profile.code);
+    }
+
+    function switchProfile(id) {
+      var target = state.db.profiles.find(function (profile) { return profile.id === id; });
+      if (!target) return;
+      publishLive(false);
+      state.db.activeId = target.id;
+      saveDb();
+      refreshProfileUi();
+      renderLibrary();
+      renderResults(state.queue);
+      renderLiveUi();
+      showProfileSelf();
+      toast('Profil actif : ' + target.name);
+    }
+
+    function addFriend(rawCode) {
+      var me = activeProfile();
+      if (!me) return;
+      var code = prettyCode(rawCode);
+      if (normalizeCode(code).length < 8) {
+        toast('Code incomplet : il doit contenir 8 caractères.');
+        return;
+      }
+      if (code === me.code) {
+        toast('C\'est votre propre code.');
+        return;
+      }
+      if (me.friends.indexOf(code) >= 0) {
+        toast('Ce profil est déjà dans vos amis.');
+        return;
+      }
+      me.friends.push(code);
+      saveDb();
+      renderFriends();
+      renderLiveFeed();
+      renderLiveNow();
+      document.getElementById('friend-code').value = '';
+      var known = profileByCode(code);
+      toast(known ? 'Ami ajouté : ' + known.name : 'Code ' + code + ' ajouté. Les infos arriveront avec la synchronisation.');
+    }
+
+    /* ---------- session juke-box ---------- */
+    function ensureSession() {
+      var code = load(OLD_SESSION_KEY, null);
+      if (!code) {
+        code = '';
+        var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+        for (var i = 0; i < 6; i++) code += chars.charAt(Math.floor(Math.random() * chars.length));
+        save(OLD_SESSION_KEY, code);
+      }
+      document.getElementById('session-code').textContent = code;
+    }
+
+    /* ---------- événements ---------- */
+    function switchTab(tabName, element) {
+      document.querySelectorAll('.tab-content').forEach(function (el) {
+        el.classList.remove('active');
+      });
+      document.querySelectorAll('.nav-item').forEach(function (el) {
+        el.classList.remove('active');
+      });
+      document.getElementById('tab-' + tabName).classList.add('active');
+      if (element) element.classList.add('active');
+    }
+
+    document.querySelectorAll('.nav-item').forEach(function (button) {
+      button.addEventListener('click', function () {
+        switchTab(button.getAttribute('data-tab'), button);
+        if (button.getAttribute('data-tab') === 'musique') renderLibrary();
+      });
+    });
+
+    document.getElementById('btn-profile').addEventListener('click', function () {
+      switchTab('profil', null);
+      showProfileSelf();
+      refreshProfileUi();
+      renderLiveUi();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    var searchInput = document.getElementById('search-bar');
+    var searchDebounce = null;
+
+    searchInput.addEventListener('input', function () {
+      var term = searchInput.value.trim();
+      clearTimeout(searchDebounce);
+
+      if (term.length < 2) {
+        if (!term) {
+          lastSearchTerm = '';
+          state.queue = [];
+          renderResults([]);
+          setSearchHint('Écrivez au moins 2 caractères pour lancer la recherche.');
+        } else {
+          setSearchHint('Encore ' + (2 - term.length) + ' caractère pour lancer la recherche.');
+        }
+        return;
+      }
+
+      searchDebounce = setTimeout(function () {
+        if (term.toLowerCase() === lastSearchTerm) return;
+        searchTracks(term);
+      }, 320);
+    });
+
+    searchInput.addEventListener('keydown', function (event) {
+      if (event.key === 'Enter') {
+        clearTimeout(searchDebounce);
+        if (!searchInput.value.trim()) { toast('Écrivez un titre ou un artiste.'); return; }
+        searchTracks(searchInput.value.trim());
+      }
+    });
+
+    document.getElementById('search-results').addEventListener('click', function (event) {
+      var retry = event.target.closest('[data-retry]');
+      if (retry) {
+        searchTracks(searchInput.value.trim());
+        return;
+      }
+      var previewBtn = event.target.closest('[data-preview]');
+      if (previewBtn) {
+        playIndex(Number(previewBtn.getAttribute('data-preview')), true);
+        return;
+      }
+      var addBtn = event.target.closest('[data-add]');
+      if (addBtn) {
+        openPlaylistSheet(state.queue[Number(addBtn.getAttribute('data-add'))]);
+        return;
+      }
+      var playBtn = event.target.closest('[data-play]');
+      if (playBtn) {
+        playIndex(Number(playBtn.getAttribute('data-play')));
+        return;
+      }
+      var favBtn = event.target.closest('[data-fav]');
+      if (favBtn) {
+        var track = findTrack(favBtn.getAttribute('data-fav'));
+        if (track) toggleFavorite(track);
+        return;
+      }
+
+      var row = event.target.closest('.result-row');
+      if (row) playIndex(Number(row.getAttribute('data-index')));
+    });
+
+    document.getElementById('library-list').addEventListener('click', function (event) {
+      var removeBtn = event.target.closest('[data-remove-track]');
+      if (removeBtn && state.playlistId) {
+        removeTrackFromPlaylist(state.playlistId, removeBtn.getAttribute('data-remove-track'));
+        return;
+      }
+      var playRow = event.target.closest('[data-play-history]');
+      if (playRow && !event.target.closest('.stars')) {
+        playFromLibrary(playRow.getAttribute('data-play-history'));
+        return;
+      }
+      var stars = event.target.closest('.stars');
+      if (!stars) return;
+      var id = stars.getAttribute('data-track');
+      var track = findTrack(id);
+      if (!track) return;
+      var value = Number(stars.getAttribute('data-value')) || 0;
+      var clicked = Array.prototype.indexOf.call(stars.children, event.target) + 1;
+      setRating(track, clicked === value ? 0 : clicked);
+    });
+
+    document.getElementById('btn-play').addEventListener('click', togglePlay);
+    document.getElementById('btn-next').addEventListener('click', playNext);
+    document.getElementById('btn-prev').addEventListener('click', playPrevious);
+
+    document.getElementById('progress').addEventListener('input', function (event) {
+      if (state.playingVia === 'spotify') return;
+      if (!audio.duration || !isFinite(audio.duration)) return;
+      audio.currentTime = (Number(event.target.value) / 100) * audio.duration;
+    });
+
+    document.getElementById('progress').addEventListener('change', function (event) {
+      if (state.playingVia !== 'spotify' || !spotify.player) return;
+      var value = Number(event.target.value);
+      spotify.player.getCurrentState().then(function (spotifyState) {
+        if (!spotifyState || !spotifyState.duration) return;
+        spotify.player.seek((value / 100) * spotifyState.duration);
+      }).catch(function () {});
+    });
+
+    document.getElementById('btn-copy-session').addEventListener('click', function () {
+      var code = document.getElementById('session-code').textContent;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(code).then(function () {
+          toast('Code ' + code + ' copié.');
+        }).catch(function () {
+          toast('Code de session : ' + code);
+        });
+      } else {
+        toast('Code de session : ' + code);
+      }
+    });
+
+    document.getElementById('open-favorites').addEventListener('click', function () {
+      state.libraryMode = 'favorites';
+      renderLibrary();
+      document.getElementById('library-list').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+
+    document.getElementById('open-rated').addEventListener('click', function () {
+      state.libraryMode = 'rated';
+      renderLibrary();
+      document.getElementById('library-list').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+
+    document.getElementById('open-history').addEventListener('click', function () {
+      state.libraryMode = 'history';
+      renderLibrary();
+      document.getElementById('library-list').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+
+    /* --- profil : interactions --- */
+    document.getElementById('emoji-row').addEventListener('click', function (event) {
+      var button = event.target.closest('[data-emoji]');
+      if (!button) return;
+      state.selectedEmoji = button.getAttribute('data-emoji');
+      renderEmojiRow();
+    });
+
+    document.getElementById('btn-save-profile').addEventListener('click', function () {
+      var me = activeProfile();
+      if (!me) return;
+      var name = document.getElementById('edit-name').value.trim();
+      if (!name) { toast('Le pseudo ne peut pas être vide.'); return; }
+      me.name = name.slice(0, 20);
+      me.emoji = state.selectedEmoji || me.emoji;
+      saveDb();
+      refreshProfileUi();
+      renderFriends();
+      renderLiveFeed();
+      if (!audio.paused) publishLive(true);
+      toast('Profil mis à jour.');
+    });
+
+    document.getElementById('btn-copy-code').addEventListener('click', function () {
+      var me = activeProfile();
+      if (!me) return;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(me.code).then(function () {
+          toast('Code ' + me.code + ' copié.');
+        }).catch(function () {
+          toast('Mon code : ' + me.code);
+        });
+      } else {
+        toast('Mon code : ' + me.code);
+      }
+    });
+
+    document.getElementById('btn-share-code').addEventListener('click', function () {
+      var me = activeProfile();
+      if (!me) return;
+      var url = location.origin + location.pathname + '#ami=' + normalizeCode(me.code);
+      if (navigator.share) {
+        navigator.share({ title: 'RezMusic', text: 'Ajoute-moi sur RezMusic avec le code ' + me.code, url: url })
+          .catch(function () {});
+      } else if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText('Ajoute-moi sur RezMusic avec le code ' + me.code + ' : ' + url)
+          .then(function () { toast('Lien de profil copié.'); })
+          .catch(function () { toast('Mon code : ' + me.code); });
+      } else {
+        toast('Mon code : ' + me.code);
+      }
+    });
+
+    document.getElementById('btn-add-friend').addEventListener('click', function () {
+      addFriend(document.getElementById('friend-code').value);
+    });
+
+    document.getElementById('friend-code').addEventListener('keydown', function (event) {
+      if (event.key === 'Enter') addFriend(event.target.value);
+    });
+
+    document.getElementById('btn-create-profile').addEventListener('click', createProfile);
+
+    document.getElementById('new-profile-name').addEventListener('keydown', function (event) {
+      if (event.key === 'Enter') createProfile();
+    });
+
+    document.getElementById('friends-list').addEventListener('click', function (event) {
+      var row = event.target.closest('[data-open-profile]');
+      if (row) openProfile(row.getAttribute('data-open-profile'));
+    });
+
+    document.getElementById('profiles-list').addEventListener('click', function (event) {
+      var row = event.target.closest('[data-switch-profile]');
+      if (row) switchProfile(row.getAttribute('data-switch-profile'));
+    });
+
+    document.getElementById('btn-back-profil').addEventListener('click', showProfileSelf);
+
+    document.getElementById('btn-add-other').addEventListener('click', function () {
+      if (state.viewCode) addFriend(state.viewCode);
+    });
+
+    document.querySelectorAll('.mode-btn').forEach(function (button) {
+      button.addEventListener('click', function () {
+        setPlaybackMode(button.getAttribute('data-mode'));
+      });
+    });
+
+    document.getElementById('btn-spotify-connect').addEventListener('click', function () {
+      if (spotifyConnected()) {
+        spotify.token = null;
+        spotify.refreshToken = null;
+        spotify.expiresAt = 0;
+        spotify.user = null;
+        try { localStorage.removeItem(SPOTIFY_STORE); } catch (e) { /* ignore */ }
+        renderPlaybackModeUi();
+        renderSpotifyPlaylists();
+        toast('Spotify déconnecté.');
+        return;
+      }
+      startSpotifyLogin();
+    });
+
+    document.getElementById('btn-preview').addEventListener('click', function () {
+      if (state.index >= 0) playIndex(state.index, true);
+      else toast('Lancez d\'abord un morceau.');
+    });
+
+    document.getElementById('btn-add-playlist').addEventListener('click', function () {
+      var track = currentTrack();
+      if (!track) { toast('Lancez d\'abord un morceau.'); return; }
+      openPlaylistSheet(track);
+    });
+
+    window.addEventListener('message', function (event) {
+      if (event.origin !== location.origin) return;
+      if (event.data && event.data.type === 'rezmusic-spotify-connected') {
+        restoreSpotifySession();
+        renderPlaybackModeUi();
+        refreshSpotifyUser();
+        toast('Spotify connecté.');
+      }
+    });
+
+    document.getElementById('btn-save-client-id').addEventListener('click', function () {
+      var input = document.getElementById('spotify-client-id');
+      var value = input.value.trim();
+      if (!isValidClientId(value)) {
+        toast('Un Client ID Spotify fait 32 caractères hexadécimaux ( ' + value.length + ' ici). Utilise le bouton copier du tableau de bord.');
+        return;
+      }
+      if (!state.db.settings) state.db.settings = {};
+      state.db.settings.spotifyClientId = value;
+      saveDb();
+      initSpotifyDiag();
+      toast('Client ID enregistré.');
+    });
+
+    var ADMIN_KEY = 'rezmusic.admin.v1';
+
+    function sha256Hex(text) {
+      return crypto.subtle.digest('SHA-256', new TextEncoder().encode(text)).then(function (buffer) {
+        var bytes = new Uint8Array(buffer);
+        var out = '';
+        for (var i = 0; i < bytes.length; i++) out += ('0' + bytes[i].toString(16)).slice(-2);
+        return out;
+      });
+    }
+
+    function openAdmin() {
+      document.getElementById('admin-sheet').classList.add('open');
+      document.getElementById('admin-password').value = '';
+      var hasPassword = !!load(ADMIN_KEY, null);
+      document.getElementById('admin-hint').textContent = hasPassword
+        ? 'Mot de passe déjà défini sur cet appareil.'
+        : 'Première fois : choisis un mot de passe (4 caractères minimum).';
+      if (!hasPassword) {
+        document.getElementById('admin-lock').style.display = 'block';
+        document.getElementById('admin-content').style.display = 'none';
+      }
+    }
+
+    function closeAdmin() {
+      document.getElementById('admin-sheet').classList.remove('open');
+    }
+
+    function revealAdmin() {
+      document.getElementById('admin-lock').style.display = 'none';
+      document.getElementById('admin-content').style.display = 'block';
+      initSpotifyDiag();
+    }
+
+    function unlockAdmin() {
+      var value = document.getElementById('admin-password').value;
+      if (value.length < 4) { toast('4 caractères minimum.'); return; }
+      if (!window.crypto || !crypto.subtle) { toast('Mot de passe indisponible hors HTTPS.'); return; }
+      var stored = load(ADMIN_KEY, null);
+      sha256Hex(value).then(function (hash) {
+        if (!stored) {
+          save(ADMIN_KEY, hash);
+          revealAdmin();
+          toast('Mot de passe enregistré.');
+          return;
+        }
+        if (hash !== stored) { toast('Mot de passe incorrect.'); return; }
+        revealAdmin();
+      });
+    }
+
+    document.getElementById('btn-admin').addEventListener('click', openAdmin);
+    document.getElementById('admin-close').addEventListener('click', closeAdmin);
+    document.getElementById('admin-unlock').addEventListener('click', unlockAdmin);
+    document.getElementById('admin-password').addEventListener('keydown', function (event) {
+      if (event.key === 'Enter') unlockAdmin();
+    });
+    document.getElementById('admin-sheet').addEventListener('click', function (event) {
+      if (event.target === document.getElementById('admin-sheet')) closeAdmin();
+    });
+
+    document.getElementById('mini-prev').addEventListener('click', playPrevious);
+    document.getElementById('mini-toggle').addEventListener('click', togglePlay);
+    document.getElementById('mini-next').addEventListener('click', playNext);
+    document.getElementById('btn-spotify-test').addEventListener('click', spotifyDiagnostic);
+
+    document.getElementById('playlists-list').addEventListener('click', function (event) {
+      var openBtn = event.target.closest('[data-open-playlist]');
+      if (openBtn) { openPlaylist(openBtn.getAttribute('data-open-playlist')); return; }
+
+      var playBtn = event.target.closest('[data-play-playlist]');
+      if (playBtn) { playPlaylist(playBtn.getAttribute('data-play-playlist')); return; }
+
+      var delBtn = event.target.closest('[data-delete-playlist]');
+      if (!delBtn) return;
+      var playlist = playlistById(delBtn.getAttribute('data-delete-playlist'));
+      if (!playlist) return;
+      if (!window.confirm('Supprimer la playlist « ' + playlist.name + ' » ?')) return;
+      var profile = activeProfile();
+      profile.playlists = profile.playlists.filter(function (item) { return item.id !== playlist.id; });
+      if (state.playlistId === playlist.id) { state.playlistId = null; state.libraryMode = 'favorites'; }
+      saveDb();
+      renderPlaylists();
+      renderLibrary();
+      toast('Playlist supprimée.');
+    });
+
+    document.getElementById('btn-create-playlist').addEventListener('click', function () {
+      var input = document.getElementById('new-playlist-name');
+      var name = input.value.trim();
+      if (!name) { toast('Donnez un nom à la playlist.'); return; }
+      createPlaylist(name, null);
+      input.value = '';
+      toast('Playlist créée.');
+    });
+
+    document.getElementById('playlist-sheet').addEventListener('click', function (event) {
+      if (event.target === document.getElementById('playlist-sheet')) closePlaylistSheet();
+      var row = event.target.closest('[data-sheet-playlist]');
+      if (row && state.pendingTrack) {
+        addTrackToPlaylist(row.getAttribute('data-sheet-playlist'), state.pendingTrack);
+        closePlaylistSheet();
+      }
+    });
+
+    document.getElementById('sheet-create').addEventListener('click', function () {
+      var input = document.getElementById('sheet-new-name');
+      var name = input.value.trim();
+      if (!name) { toast('Donnez un nom à la playlist.'); return; }
+      var playlist = createPlaylist(name, state.pendingTrack || null);
+      closePlaylistSheet();
+      if (playlist) toast('Ajouté à « ' + playlist.name + ' ».');
+    });
+
+    document.getElementById('sheet-cancel').addEventListener('click', closePlaylistSheet);
+
+    document.getElementById('spotify-playlists').addEventListener('click', function (event) {
+      var button = event.target.closest('[data-import-playlist]');
+      if (button) importSpotifyPlaylist(button.getAttribute('data-import-playlist'), button.getAttribute('data-import-name'));
+    });
+
+    document.getElementById('btn-reset').addEventListener('click', function () {
+      if (!window.confirm('Effacer tous les profils, favoris, notes et codes de ce navigateur ?')) return;
+      try {
+        localStorage.removeItem(DB_KEY);
+        localStorage.removeItem(OLD_FAV_KEY);
+        localStorage.removeItem(OLD_RATINGS_KEY);
+        localStorage.removeItem(OLD_SESSION_KEY);
+        localStorage.removeItem(LIVE_KEY);
+      } catch (e) { /* ignore */ }
+      state.live = {};
+      state.queue = [];
+      state.index = -1;
+      audio.pause();
+      audio.removeAttribute('src');
+      initDb();
+      ensureSession();
+      refreshProfileUi();
+      renderLibrary();
+      renderLiveUi();
+      document.getElementById('search-results').innerHTML = '';
+      document.getElementById('search-hint').textContent = 'Appuyez sur Entrée pour rechercher un titre.';
+      applyArtworkMood(null);
+      updateHistoryCount();
+      showProfileSelf();
+      toast('Données réinitialisées.');
+    });
+
+    /* ---------- mode de lecture, Spotify et playlists ---------- */
+    var SPOTIFY_CLIENT_ID_DEFAULT = '3a9cd2cd1d445e693501c9e29a7b3';
+
+    function spotifyClientId() {
+      return (state.db && state.db.settings && state.db.settings.spotifyClientId) || SPOTIFY_CLIENT_ID_DEFAULT;
+    }
+
+    function isValidClientId(value) {
+      return /^[0-9a-fA-F]{32}$/.test(String(value || '').trim());
+    }
+
+    function clientIdLine() {
+      var id = spotifyClientId();
+      return 'Client ID : ' + id + ' (' + id.length + ' caractères' +
+        (isValidClientId(id) ? ', valide)' : ', INVALIDE — un Client ID Spotify fait 32 caractères)');
+    }
+    var SPOTIFY_SCOPES = 'streaming user-read-email user-read-private playlist-read-private playlist-read-collaborative user-modify-playback-state user-read-playback-state';
+    var SPOTIFY_STORE = 'rezmusic.spotify.v1';
+
+    var spotify = {
+      token: null,
+      refreshToken: null,
+      expiresAt: 0,
+      user: null,
+      player: null,
+      deviceId: null,
+      loading: null
+    };
+
+    function spotifyConnected() {
+      return !!spotify.token;
+    }
+
+    function playbackMode() {
+      return state.db && state.db.settings ? state.db.settings.playbackMode : 'preview';
+    }
+
+    function setPlaybackMode(mode) {
+      if (!state.db.settings) state.db.settings = {};
+      state.db.settings.playbackMode = mode === 'spotify' ? 'spotify' : 'preview';
+      saveDb();
+      renderPlaybackModeUi();
+      toast(mode === 'spotify'
+        ? 'Lecture complète activée : compte Spotify Premium requis.'
+        : 'Mode extrait 30 s activé.');
+    }
+
+    function renderPlaybackModeUi() {
+      document.querySelectorAll('.mode-btn').forEach(function (button) {
+        button.classList.toggle('active', button.getAttribute('data-mode') === playbackMode());
+      });
+      var stateLabel = document.getElementById('spotify-state');
+      if (stateLabel) {
+        stateLabel.textContent = spotifyConnected()
+          ? 'Connecté' + (spotify.user && spotify.user.display_name ? ' : ' + spotify.user.display_name : '')
+          : 'Non connecté';
+      }
+      var connectBtn = document.getElementById('btn-spotify-connect');
+      if (connectBtn) connectBtn.textContent = spotifyConnected() ? 'Se déconnecter de Spotify' : 'Se connecter avec Spotify';
+    }
+
+    function redirectUri() {
+      return location.origin + location.pathname;
+    }
+
+    function randomString(length) {
+      var chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+      var out = '';
+      var values = new Uint8Array(length);
+      if (window.crypto && crypto.getRandomValues) crypto.getRandomValues(values);
+      else for (var i = 0; i < length; i++) values[i] = Math.floor(Math.random() * 256);
+      for (var j = 0; j < length; j++) out += chars.charAt(values[j] % chars.length);
+      return out;
+    }
+
+    function base64Url(buffer) {
+      var bytes = new Uint8Array(buffer);
+      var binary = '';
+      for (var i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+      return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    }
+
+    function sha256(text) {
+      return crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+    }
+
+    function inIframe() {
+      try { return window.self !== window.top; } catch (error) { return true; }
+    }
+
+    function showSpotifyNotice(message, withButton) {
+      var notice = document.getElementById('spotify-notice');
+      if (!notice) return;
+      notice.style.display = 'block';
+      notice.innerHTML = '<div>' + escapeHtml(message) + '</div>' +
+        (withButton ? '<button class="btn secondary" id="btn-open-tab">Ouvrir RezMusic dans un onglet</button>' : '');
+      var button = document.getElementById('btn-open-tab');
+      if (button) {
+        button.addEventListener('click', function () {
+          window.open(location.href, '_blank', 'noopener');
+        });
+      }
+    }
+
+    function renderSpotifyNotice() {
+      if (inIframe()) {
+        showSpotifyNotice('Tu es dans la prévisualisation intégrée : Spotify refuse de s\'y connecter (il interdit les cadres). Ouvre RezMusic dans un onglet complet avec le bouton ci-dessous, puis reconnecte-toi.', true);
+      }
+    }
+
+    function startSpotifyLogin() {
+      if (!isValidClientId(spotifyClientId())) {
+        toast('Client ID Spotify invalide (' + spotifyClientId().length + ' caractères au lieu de 32). Copie-le depuis le tableau de bord.');
+        return;
+      }
+      if (inIframe()) {
+        renderSpotifyNotice();
+        toast('Ouvre RezMusic dans un onglet complet pour te connecter à Spotify.');
+        return;
+      }
+      if (!window.crypto || !crypto.subtle) {
+        toast('Connexion Spotify impossible : HTTPS requis.');
+        return;
+      }
+      var verifier = randomString(64);
+      sessionStorage.setItem('rezmusic.pkce', verifier);
+      sha256(verifier).then(function (digest) {
+        var params = new URLSearchParams({
+          client_id: spotifyClientId(),
+          response_type: 'code',
+          redirect_uri: redirectUri(),
+          scope: SPOTIFY_SCOPES,
+          code_challenge_method: 'S256',
+          code_challenge: base64Url(digest)
+        });
+        var authUrl = 'https://accounts.spotify.com/authorize?' + params.toString();
+        var popup = window.open(authUrl, 'rezmusic-spotify', 'width=520,height=760');
+        if (!popup) {
+          toast('Popup bloquée : autorise-la ou utilise « Ouvrir dans un onglet ».');
+          location.href = authUrl;
+        }
+      }).catch(function () {
+        toast('Connexion Spotify impossible (chiffrement indisponible).');
+      });
+    }
+
+    function saveSpotifySession(token) {
+      spotify.token = token.access_token;
+      spotify.refreshToken = token.refresh_token || spotify.refreshToken;
+      spotify.expiresAt = Date.now() + (Number(token.expires_in) || 3600) * 1000 - 30000;
+      save(SPOTIFY_STORE, {
+        token: spotify.token,
+        refreshToken: spotify.refreshToken,
+        expiresAt: spotify.expiresAt
+      });
+    }
+
+    function restoreSpotifySession() {
+      var stored = load(SPOTIFY_STORE, null);
+      if (!stored || !stored.token) return;
+      spotify.token = stored.token;
+      spotify.refreshToken = stored.refreshToken || null;
+      spotify.expiresAt = Number(stored.expiresAt) || 0;
+      if (spotify.expiresAt && Date.now() > spotify.expiresAt) {
+        refreshSpotifyToken().catch(function () {});
+      }
+      refreshSpotifyUser();
+    }
+
+    function refreshSpotifyToken() {
+      if (!spotify.refreshToken) return Promise.reject(new Error('Session Spotify expirée. Reconnectez-vous.'));
+      var body = new URLSearchParams({
+        client_id: spotifyClientId(),
+        grant_type: 'refresh_token',
+        refresh_token: spotify.refreshToken
+      });
+      return fetch('https://accounts.spotify.com/api/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: body.toString()
+      }).then(function (res) {
+        if (!res.ok) throw new Error('Session Spotify expirée. Reconnectez-vous.');
+        return res.json();
+      }).then(function (token) {
+        saveSpotifySession(token);
+        return spotify.token;
+      });
+    }
+
+    function ensureSpotifyToken() {
+      if (!spotify.token) return Promise.reject(new Error('Connectez Spotify dans les Réglages.'));
+      if (spotify.expiresAt && Date.now() > spotify.expiresAt) return refreshSpotifyToken();
+      return Promise.resolve(spotify.token);
+    }
+
+    function completeSpotifyLogin(code) {
+      var verifier = sessionStorage.getItem('rezmusic.pkce');
+      if (!verifier) { toast('Connexion Spotify : vérification manquante, réessayez.'); return; }
+      var body = new URLSearchParams({
+        client_id: spotifyClientId(),
+        grant_type: 'authorization_code',
+        code: code,
+        redirect_uri: redirectUri(),
+        code_verifier: verifier
+      });
+      fetch('https://accounts.spotify.com/api/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: body.toString()
+      }).then(function (res) {
+        if (!res.ok) throw new Error('Connexion Spotify refusée. Vérifiez l\'URI de redirection dans le tableau de bord Spotify.');
+        return res.json();
+      }).then(function (token) {
+        sessionStorage.removeItem('rezmusic.pkce');
+        saveSpotifySession(token);
+        history.replaceState(null, '', location.pathname + location.hash);
+        refreshSpotifyUser();
+        toast('Spotify connecté.');
+        if (window.opener && window.opener !== window) {
+          try { window.opener.postMessage({ type: 'rezmusic-spotify-connected' }, location.origin); } catch (e) { /* ignore */ }
+          setTimeout(function () { window.close(); }, 400);
+        }
+      }).catch(function (error) {
+        toast(error.message);
+      });
+    }
+
+    function spotifyApi(path, options) {
+      options = options || {};
+      return ensureSpotifyToken().then(function () {
+        return fetch('https://api.spotify.com/v1' + path, {
+          method: options.method || 'GET',
+          headers: {
+            Authorization: 'Bearer ' + spotify.token,
+            'Content-Type': 'application/json'
+          },
+          body: options.body ? JSON.stringify(options.body) : undefined
+        });
+      }).then(function (res) {
+        if (res.status === 204) return null;
+        return res.json().then(function (data) {
+          if (!res.ok) throw new Error((data && data.error && data.error.message) || 'Erreur Spotify');
+          return data;
+        });
+      });
+    }
+
+    function refreshSpotifyUser() {
+      if (!spotify.token) { renderPlaybackModeUi(); renderSpotifyPlaylists(); return; }
+      spotifyApi('/me').then(function (user) {
+        spotify.user = user;
+        renderPlaybackModeUi();
+        renderSpotifyPlaylists();
+      }).catch(function () {
+        renderPlaybackModeUi();
+        renderSpotifyPlaylists();
+      });
+    }
+
+    function playlistTotal(item) {
+      if (item && item.items && typeof item.items.total === 'number') return item.items.total;
+      if (item && item.tracks && typeof item.tracks.total === 'number') return item.tracks.total;
+      return 0;
+    }
+
+    function renderSpotifyPlaylists() {
+      var container = document.getElementById('spotify-playlists');
+      if (!container) return;
+      if (!spotifyConnected()) {
+        container.innerHTML = '<div class="empty-state">Connectez votre compte Spotify pour voir vos playlists et les importer.</div>';
+        return;
+      }
+      container.innerHTML = '<div class="empty-state">Chargement de vos playlists…</div>';
+
+      spotifyApi('/me/playlists?limit=20').then(function (data) {
+        var items = ((data && data.items) || []).filter(function (item) { return item; });
+        if (!items.length) {
+          container.innerHTML = '<div class="empty-state">Aucune playlist Spotify trouvée.</div>';
+          return;
+        }
+        container.innerHTML = items.map(function (item) {
+          var total = playlistTotal(item);
+          return '<div class="person-row" style="cursor: default;">' +
+            '<div class="person-avatar">' + (item.images && item.images[0]
+              ? '<img src="' + escapeHtml(item.images[0].url) + '" alt="" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">'
+              : '🎵') + '</div>' +
+            '<div class="person-info"><div class="person-name">' + escapeHtml(item.name) + '</div>' +
+            '<div class="person-sub">' + (total ? total + ' titre' + (total > 1 ? 's' : '') : 'Nombre de titres non communiqué') + '</div></div>' +
+            '<button class="chip-btn" style="flex:0 0 auto;" data-import-playlist="' + escapeHtml(item.id) + '" data-import-name="' + escapeHtml(item.name) + '">Importer</button>' +
+          '</div>';
+        }).join('');
+      }).catch(function (error) {
+        container.innerHTML = '<div class="empty-state">' + escapeHtml(error.message) + '</div>';
+      });
+    }
+
+    function mapSpotifyTrack(t) {
+      return {
+        id: 'sp' + t.id,
+        title: t.name || 'Titre inconnu',
+        artist: (t.artists || []).map(function (a) { return a.name; }).join(', '),
+        album: t.album ? t.album.name : '',
+        artwork: t.album && t.album.images && t.album.images[0] ? t.album.images[0].url : '',
+        preview: t.preview_url || '',
+        duration: t.duration_ms ? Math.round(t.duration_ms / 1000) : 0,
+        spotifyId: t.id,
+        spotifyUri: t.uri
+      };
+    }
+
+    function fetchPlaylistRows(id, base, offset, acc) {
+      var path = '/playlists/' + encodeURIComponent(id) + base + '?limit=100&offset=' + offset;
+      return spotifyApi(path).then(function (data) {
+        var rows = (data && data.items) || [];
+        rows.forEach(function (row) {
+          var t = row && (row.item || row.track);
+          if (!t || typeof t !== 'object' || !t.id) return;
+          if (t.type && t.type !== 'track') return;
+          acc.push(mapSpotifyTrack(t));
+        });
+        var total = Number(data && data.total) || 0;
+        var nextOffset = offset + rows.length;
+        if (rows.length && nextOffset < total) return fetchPlaylistRows(id, base, nextOffset, acc);
+        return acc;
+      });
+    }
+
+    function importSpotifyPlaylist(id, name) {
+      toast('Import de la playlist…');
+      fetchPlaylistRows(id, '/items', 0, []).catch(function () {
+        return fetchPlaylistRows(id, '/tracks', 0, []);
+      }).then(function (tracks) {
+        if (!tracks || !tracks.length) { toast('Aucun titre lisible dans cette playlist.'); return; }
+        var profile = activeProfile();
+        profile.playlists.push({
+          id: uid(),
+          name: (name || 'Playlist Spotify').slice(0, 40),
+          tracks: tracks,
+          createdAt: Date.now()
+        });
+        saveDb();
+        renderPlaylists();
+        toast(tracks.length + ' titre' + (tracks.length > 1 ? 's' : '') + ' importé' + (tracks.length > 1 ? 's' : ''));
+      }).catch(function (error) {
+        toast(error.message);
+      });
+    }
+
+    function ensureSpotifyPlayer() {
+      if (spotify.player && spotify.deviceId) return Promise.resolve(spotify.deviceId);
+      if (spotify.loading) return spotify.loading;
+
+      spotify.loading = new Promise(function (resolve, reject) {
+        function create() {
+          var player = new window.Spotify.Player({
+            name: 'RezMusic',
+            getOAuthToken: function (cb) { ensureSpotifyToken().then(cb).catch(function () {}); },
+            volume: 0.8
+          });
+          player.addListener('ready', function (data) {
+            spotify.deviceId = data.device_id;
+            resolve(spotify.deviceId);
+          });
+          player.addListener('player_state_changed', handleSpotifyState);
+          player.addListener('not_ready', function () { spotify.deviceId = null; });
+          player.addListener('account_error', function () {
+            reject(new Error('Compte Spotify Premium requis pour la lecture complète.'));
+          });
+          player.addListener('authentication_error', function () {
+            reject(new Error('Session Spotify expirée. Reconnectez-vous.'));
+          });
+          player.addListener('initialization_error', function (error) {
+            reject(new Error('Lecteur Spotify indisponible : ' + error.message));
+          });
+          player.connect();
+          spotify.player = player;
+        }
+
+        if (window.Spotify) { create(); return; }
+        window.onSpotifyWebPlaybackSDKReady = create;
+        var script = document.createElement('script');
+        script.src = 'https://sdk.scdn.co/spotify-player.js';
+        script.onerror = function () { reject(new Error('Lecteur Spotify bloqué par la page.')); };
+        document.body.appendChild(script);
+      }).catch(function (error) {
+        spotify.loading = null;
+        throw error;
+      });
+
+      return spotify.loading;
+    }
+
+    function resolveSpotifyUri(track) {
+      if (track.spotifyUri) return Promise.resolve(track.spotifyUri);
+      var query = 'track:"' + track.title + '" artist:"' + track.artist + '"';
+      return spotifyApi('/search?type=track&limit=1&q=' + encodeURIComponent(query)).then(function (data) {
+        var items = data && data.tracks && data.tracks.items ? data.tracks.items : [];
+        if (!items.length) throw new Error('Titre introuvable sur Spotify.');
+        track.spotifyUri = items[0].uri;
+        return track.spotifyUri;
+      });
+    }
+
+    var spotifyTicker = null;
+
+    function startSpotifyTicker() {
+      stopSpotifyTicker();
+      spotifyTicker = setInterval(function () {
+        if (state.playingVia !== 'spotify' || !spotify.player) return;
+        spotify.player.getCurrentState().then(function (spotifyState) {
+          if (spotifyState) handleSpotifyState(spotifyState);
+        }).catch(function () {});
+      }, 700);
+    }
+
+    function stopSpotifyTicker() {
+      clearInterval(spotifyTicker);
+      spotifyTicker = null;
+    }
+
+    function handleSpotifyState(spotifyState) {
+      if (!spotifyState || state.playingVia !== 'spotify') return;
+      var duration = Number(spotifyState.duration) || 0;
+      var position = Number(spotifyState.position) || 0;
+      var paused = !!spotifyState.paused;
+
+      document.getElementById('time-current').textContent = formatTime(position / 1000);
+      document.getElementById('time-total').textContent = duration ? formatTime(duration / 1000) : '0:00';
+      document.getElementById('progress').value = duration ? (position / duration) * 100 : 0;
+      document.getElementById('btn-play').textContent = paused ? '▶' : '❚❚';
+      document.getElementById('visualizer').classList.toggle('playing', !paused);
+      document.getElementById('visualizer-state').textContent = paused ? 'En pause' : 'En lecture';
+
+      var current = spotifyState.track_window && spotifyState.track_window.current_track;
+      if (current) {
+        var title = document.getElementById('current-track-title').textContent;
+        if (title !== current.name) {
+          document.getElementById('current-track-title').textContent = current.name;
+          document.getElementById('current-track-artist').textContent =
+            (current.artists || []).map(function (a) { return a.name; }).join(', ');
+          if (current.album && current.album.images && current.album.images[0]) {
+            var art = document.getElementById('player-art');
+            art.src = current.album.images[0].url;
+            art.classList.add('visible');
+          }
+        }
+      }
+
+      updateMiniPlayer(currentTrack());
+    }
+
+    function playWithSpotify(track) {
+      try { audio.pause(); } catch (e) { /* ignore */ }
+      hideSpotifyEmbed();
+      return ensureSpotifyToken()
+        .then(function () { return resolveSpotifyUri(track); })
+        .then(function (uri) {
+          return ensureSpotifyPlayer().then(function (deviceId) {
+            return spotifyApi('/me/player', { method: 'PUT', body: { device_ids: [deviceId], play: true } })
+              .then(function () {
+                return spotifyApi('/me/player/play', { method: 'PUT', body: { uris: [uri] } });
+              });
+          });
+        })
+        .then(function () {
+          state.playingVia = 'spotify';
+          state.index = state.queue.findIndex(function (item) { return item.id === track.id; });
+          updatePlayerUi(track);
+          highlightPlaying();
+          document.getElementById('player-meta').textContent = 'En lecture • Spotify';
+          document.getElementById('visualizer').classList.add('playing');
+          document.getElementById('visualizer-state').textContent = 'En lecture';
+          document.getElementById('btn-play').textContent = '❚❚';
+          document.getElementById('time-total').textContent = track.duration ? formatTime(track.duration) : '0:00';
+          startSpotifyTicker();
+          addToHistory(track);
+          publishLive(true);
+          return true;
+        });
+    }
+
+    function handleSpotifyRedirect() {
+      var params = new URLSearchParams(location.search);
+      var code = params.get('code');
+      if (code) completeSpotifyLogin(code);
+      else if (params.get('error')) toast('Connexion Spotify annulée.');
+    }
+
+    /* ---------- playlists ---------- */
+    function playlistById(id) {
+      var profile = activeProfile();
+      if (!profile) return null;
+      return profile.playlists.find(function (playlist) { return playlist.id === id; }) || null;
+    }
+
+    function renderPlaylists() {
+      var container = document.getElementById('playlists-list');
+      if (!container) return;
+      var profile = activeProfile();
+      if (!profile) return;
+
+      if (!profile.playlists.length) {
+        container.innerHTML = '<div class="empty-state">Aucune playlist. Créez-en une, puis ajoutez des morceaux avec le bouton ＋ dans les résultats de recherche.</div>';
+        return;
+      }
+
+      container.innerHTML = profile.playlists.map(function (playlist) {
+        return '<div class="person-row" style="cursor: default;">' +
+          '<div class="person-avatar">🎵</div>' +
+          '<div class="person-info" data-open-playlist="' + escapeHtml(playlist.id) + '" style="cursor: pointer;">' +
+            '<div class="person-name">' + escapeHtml(playlist.name) + '</div>' +
+            '<div class="person-sub">' + playlist.tracks.length + ' titre' + (playlist.tracks.length > 1 ? 's' : '') + '</div>' +
+          '</div>' +
+          '<button class="chip-btn" style="flex: 0 0 auto;" data-play-playlist="' + escapeHtml(playlist.id) + '">Lire</button>' +
+          '<button class="icon-btn" data-delete-playlist="' + escapeHtml(playlist.id) + '" title="Supprimer">✕</button>' +
+        '</div>';
+      }).join('');
+    }
+
+    function createPlaylist(name, track) {
+      var profile = activeProfile();
+      if (!profile) return null;
+      var playlist = {
+        id: uid(),
+        name: String(name || '').trim().slice(0, 30) || 'Playlist',
+        tracks: track ? [track] : [],
+        createdAt: Date.now()
+      };
+      profile.playlists.push(playlist);
+      saveDb();
+      renderPlaylists();
+      return playlist;
+    }
+
+    function addTrackToPlaylist(playlistId, track) {
+      var playlist = playlistById(playlistId);
+      if (!playlist || !track) return;
+      if (playlist.tracks.some(function (item) { return item.id === track.id; })) {
+        toast('Déjà dans « ' + playlist.name + ' ».');
+        return;
+      }
+      playlist.tracks.push(track);
+      saveDb();
+      renderPlaylists();
+      if (state.playlistId === playlist.id) renderLibrary();
+      toast('Ajouté à « ' + playlist.name + ' ».');
+    }
+
+    function removeTrackFromPlaylist(playlistId, trackId) {
+      var playlist = playlistById(playlistId);
+      if (!playlist) return;
+      playlist.tracks = playlist.tracks.filter(function (item) { return item.id !== trackId; });
+      saveDb();
+      renderPlaylists();
+      renderLibrary();
+      toast('Morceau retiré.');
+    }
+
+    function openPlaylist(id) {
+      if (!playlistById(id)) return;
+      state.libraryMode = 'playlist';
+      state.playlistId = id;
+      renderLibrary();
+      document.getElementById('library-list').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function playPlaylist(id) {
+      var playlist = playlistById(id);
+      if (!playlist || !playlist.tracks.length) { toast('Playlist vide.'); return; }
+      state.queue = playlist.tracks.slice();
+      state.index = -1;
+      playIndex(0);
+    }
+
+    function playFromLibrary(id) {
+      var profile = activeProfile();
+      if (!profile) return;
+      var list;
+      if (state.libraryMode === 'rated') list = ratedTracks(profile);
+      else if (state.libraryMode === 'history') list = historyTracks(profile);
+      else if (state.libraryMode === 'playlist') {
+        var playlist = playlistById(state.playlistId);
+        list = playlist ? playlist.tracks : [];
+      } else list = profile.favorites;
+
+      if (!list.length) return;
+      state.queue = list.slice();
+      var index = state.queue.findIndex(function (track) { return track.id === id; });
+      playIndex(index >= 0 ? index : 0);
+      renderLibrary();
+    }
+
+    function openPlaylistSheet(track) {
+      if (!track) return;
+      var profile = activeProfile();
+      if (!profile) return;
+      state.pendingTrack = track;
+
+      var list = document.getElementById('sheet-playlists');
+      list.innerHTML = profile.playlists.length
+        ? profile.playlists.map(function (playlist) {
+            return '<button class="person-row" data-sheet-playlist="' + escapeHtml(playlist.id) + '">' +
+              '<div class="person-avatar">🎵</div>' +
+              '<div class="person-info"><div class="person-name">' + escapeHtml(playlist.name) + '</div>' +
+              '<div class="person-sub">' + playlist.tracks.length + ' titre' + (playlist.tracks.length > 1 ? 's' : '') + '</div></div>' +
+              '<span class="code-inline">Ajouter</span></button>';
+          }).join('')
+        : '<div class="empty-state">Aucune playlist pour le moment : créez la première ci-dessous.</div>';
+
+      document.getElementById('sheet-new-name').value = '';
+      document.getElementById('playlist-sheet').classList.add('open');
+    }
+
+    function closePlaylistSheet() {
+      document.getElementById('playlist-sheet').classList.remove('open');
+      state.pendingTrack = null;
+    }
+
+    function sourceSpotify(term) {
+      return spotifyApi('/search?type=track&limit=10&q=' + encodeURIComponent(term)).then(function (data) {
+        var items = (data && data.tracks && data.tracks.items) || [];
+        return cleanResults(items.map(function (track) {
+          return {
+            id: 'sp' + track.id,
+            title: track.name,
+            artist: (track.artists || []).map(function (a) { return a.name; }).join(', '),
+            album: track.album ? track.album.name : '',
+            artwork: track.album && track.album.images && track.album.images[0] ? track.album.images[0].url : '',
+            preview: track.preview_url || '',
+            duration: track.duration_ms ? Math.round(track.duration_ms / 1000) : 0,
+            spotifyId: track.id,
+            spotifyUri: track.uri
+          };
+        }));
+      });
+    }
+
+    function updateMiniPlayer(track) {
+      var bar = document.getElementById('mini-player');
+      if (!bar) return;
+      if (!track) { bar.classList.remove('show'); return; }
+
+      document.getElementById('mini-title').textContent = track.title;
+      document.getElementById('mini-artist').textContent = track.artist;
+      var art = document.getElementById('mini-art');
+      if (track.artwork) {
+        art.src = track.artwork;
+        art.style.visibility = 'visible';
+      } else {
+        art.removeAttribute('src');
+        art.style.visibility = 'hidden';
+      }
+      var playing = document.getElementById('btn-play').textContent === '❚❚';
+      document.getElementById('mini-toggle').textContent = playing ? '❚❚' : '▶';
+      bar.classList.add('show');
+    }
+
+    function showSpotifyEmbed(track) {
+      if (!track || !track.spotifyId) return;
+      var wrap = document.getElementById('spotify-embed');
+      var frame = document.getElementById('spotify-embed-frame');
+      if (!wrap || !frame) return;
+      frame.src = 'https://open.spotify.com/embed/track/' + encodeURIComponent(track.spotifyId) + '?utm_source=generator&theme=0';
+      wrap.style.display = 'block';
+      state.playingVia = 'embed';
+      document.getElementById('player-meta').textContent = 'Lecture complète • lecteur Spotify';
+      document.getElementById('player-art').classList.remove('visible');
+    }
+
+    function showSpotifyEmbedForTrack(track) {
+      resolveSpotifyUri(track).then(function (uri) {
+        track.spotifyId = String(uri).split(':').pop();
+        showSpotifyEmbed(track);
+      }).catch(function (error) {
+        if (track.preview) startPreview(track);
+        toast(error.message);
+      });
+    }
+
+    function hideSpotifyEmbed() {
+      var wrap = document.getElementById('spotify-embed');
+      if (!wrap) return;
+      wrap.style.display = 'none';
+      var frame = document.getElementById('spotify-embed-frame');
+      if (frame) frame.src = 'about:blank';
+    }
+
+    function initSpotifyDiag() {
+      var out = document.getElementById('spotify-diag');
+      if (!out) return;
+      var clientInput = document.getElementById('spotify-client-id');
+      if (clientInput && !clientInput.value) clientInput.value = spotifyClientId();
+
+      out.textContent = clientIdLine() +
+        '\nURI de redirection à déclarer : ' + redirectUri() +
+        '\n\nTouchez « Tester la connexion Spotify ».';
+    }
+
+    function spotifyDiagnostic() {
+      var out = document.getElementById('spotify-diag');
+      if (!out) return;
+      var lines = [];
+      lines.push(clientIdLine());
+      lines.push('Page actuelle : ' + location.href);
+      lines.push('URI de redirection : ' + redirectUri());
+      lines.push('Jeton : ' + (spotifyConnected() ? 'présent' : 'absent'));
+      lines.push('Contexte : ' + (inIframe() ? 'prévisualisation intégrée (Spotify la bloque)' : 'onglet complet'));
+      out.textContent = lines.join('\n') + '\nTest en cours…';
+
+      ensureSpotifyToken()
+        .then(function () { return spotifyApi('/me'); })
+        .then(function (user) {
+          lines.push('Compte : ' + (user.display_name || user.id));
+          lines.push('Abonnement : ' + (user.product
+            ? user.product + (user.product === 'premium'
+                ? ' → lecture complète possible'
+                : ' → sans Premium, Spotify limite à 30 s')
+            : 'non communiqué (champ retiré par Spotify en février 2026) — seul Premium autorise la lecture complète'));
+          return spotifyApi('/me/player/devices').then(function (data) {
+            var devices = (data && data.devices) || [];
+            lines.push('Appareils : ' + (devices.length
+              ? devices.map(function (device) { return device.name + (device.is_active ? ' (actif)' : ''); }).join(', ')
+              : 'aucun'));
+            return lines;
+          }, function () { return lines; });
+        })
+        .then(function (finalLines) {
+          out.textContent = finalLines.join('\n');
+        })
+        .catch(function (error) {
+          lines.push('Erreur : ' + error.message);
+          out.textContent = lines.join('\n');
+        });
+    }
+
+    /* ---------- démarrage ---------- */
+    function setGreeting() {
+      var hour = new Date().getHours();
+      var text = 'Bonsoir.';
+      if (hour < 6) text = 'Bonne nuit.';
+      else if (hour < 12) text = 'Bonjour.';
+      else if (hour < 18) text = 'Bon après-midi.';
+      document.getElementById('greeting').textContent = text;
+    }
+
+    function handleHash() {
+      var hash = String(location.hash || '');
+      var friendMatch = hash.match(/ami=([A-Za-z0-9-]+)/);
+      var profileMatch = hash.match(/profil=([A-Za-z0-9-]+)/);
+
+      if (friendMatch) {
+        var code = prettyCode(friendMatch[1]);
+        if (code) {
+          switchTab('profil', null);
+          document.getElementById('friend-code').value = code;
+          toast('Code ' + code + ' détecté. Touchez « Ajouter cet ami ».');
+        }
+      } else if (profileMatch) {
+        openProfile(prettyCode(profileMatch[1]));
+        switchTab('profil', null);
+      } else if (hash.indexOf('admin') >= 0) {
+        switchTab('reglages', null);
+        openAdmin();
+      }
+    }
+
+    initDb();
+    setGreeting();
+    ensureSession();
+    refreshProfileUi();
+    watchLive();
+    renderLiveUi();
+    renderLibrary();
+    updateHistoryCount();
+    handleHash();
+    renderPlaybackModeUi();
+    renderPlaylists();
+    restoreSpotifySession();
+    handleSpotifyRedirect();
+    initSpotifyDiag();
+    renderSpotifyNotice();
+
+    if ('serviceWorker' in navigator && location.protocol === 'https:') {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('sw.js').catch(function () { /* hors-ligne indisponible */ });
+      });
+    }
+  </script>
+
+</body>
+</html>
